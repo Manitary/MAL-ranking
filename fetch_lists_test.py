@@ -7,7 +7,9 @@ from ratelimit import limits, sleep_and_retry
 
 load_dotenv()
 USER_ID_LINK = "https://myanimelist.net/comments.php?id="
-USER_LIST_LINK = "https://api.myanimelist.net/v2/users/{}/animelist?limit=1000&status=completed&fields=list_status"
+USER_LIST_LINK = (
+    "https://api.myanimelist.net/v2/users/{}/animelist?limit=1000&fields=list_status"
+)
 username_pattern = re.compile(r"/profile/(.*)")
 headers = {
     "X-MAL-CLIENT-ID": os.getenv("CLIENT_ID"),
