@@ -95,7 +95,9 @@ def get_user_from_id(user_id: int) -> str:
 @limits(calls=1, period=REQUEST_DELAY)
 def get_anime_from_id(anime_id: int) -> bool:
     """Return the MAL anime entry corresponding to the given ID, if it exists."""
-    response = requests.get(LINK_ANIME_ID.format(anime_id), timeout=TIMEOUT)
+    response = requests.get(
+        LINK_ANIME_ID.format(anime_id), headers=HEADERS, timeout=TIMEOUT
+    )
     if response.status_code != 200:
         return None
     return response.json()
