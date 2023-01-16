@@ -8,7 +8,7 @@ import random
 import logging
 from datetime import datetime
 from itertools import combinations
-from typing import Callable
+from typing import Callable, Iterator
 import requests
 import numpy as np
 from dotenv import load_dotenv
@@ -321,5 +321,14 @@ def load_samples(*filenames: str) -> dict[int, list]:
     sample = {}
     for filename in sorted(tqdm(filenames)):
         with open(file=filename, encoding="utf8") as f:
-            sample |= json.loads(f.read())
+            sample |= json.load(f)
     return sample
+
+
+def yield_samples(*filenames: str) -> Iterator[dict[int, list]]:
+    """Yield samples from JSON files.
+
+    This assumes that all samples are disjoint."""
+    for filename in tqdm(filenames):
+        with open(file=filename, encoding="utf8") as f:
+            yield json.load(f)
