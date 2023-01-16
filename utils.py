@@ -44,8 +44,8 @@ HEADERS = {
 }
 FILE_INVALID_USER_ID = "data/invalid_user_ids"
 FILE_VISITED_USER_ID = "data/visited_user_ids"
-FILE_VALID_ANIME_ID = "data/valid_anime_ids.json"
-FILE_ANIME_DB = "data/anime.json"
+FILE_VALID_ANIME_ID = "data/valid_anime_ids"
+FILE_ANIME_DB = "data/anime"
 
 
 @sleep_and_retry
@@ -114,11 +114,11 @@ def get_all_anime() -> None:
             id_list.append(anime_id)
     order_to_id = {i: j for i, j in enumerate(id_list)}
     id_to_order = {j: i for i, j in enumerate(id_list)}
-    anime_list = {"oder": order_to_id, "id": id_to_order}
-    with open(FILE_VALID_ANIME_ID, "w", encoding="utf8") as f:
-        json.dump(anime_list, f)
-    with open(FILE_ANIME_DB, "w", encoding="utf8") as f:
-        json.dump(anime_info, f)
+    anime_list = {"order": order_to_id, "id": id_to_order}
+    with open(FILE_VALID_ANIME_ID, "wb") as f:
+        pickle.dump(anime_list, f)
+    with open(FILE_ANIME_DB, "wb") as f:
+        pickle.dump(anime_info, f)
 
 
 def is_list_valid(mal_list: list[dict]) -> bool:
@@ -265,11 +265,11 @@ def iterate_parameter(p: np.ndarray, mt: np.ndarray, w: np.ndarray) -> np.ndarra
 def create_table(sample: dict[int, list], save: bool = True) -> np.ndarray:
     """Return the table used for the Bradley-Terry model for the given sample."""
     print("Initialising table")
-    matrix = np.zeros((MAL_ANIME, MAL_ANIME), dtype=int)
-    # TODO: massive table, should discard IDs not associated to any anime.
+    with open(FILE_VALID_ANIME_ID, encoding="utf8") as f:
+        id_to_order = pickle.load(f)["id"]
+    matrix = np.zeros((len(id_to_order), len(id_to_order)), dtype=int)
     with tqdm(total=len(sample)) as progress_bar:
         for num, mal in sample.items():
-            # print(f"Processing user {num}")
             progress_bar.set_description(f"Processing user {num}")
             filtered_mal = {
                 tuple(
@@ -283,6 +283,10 @@ def create_table(sample: dict[int, list], save: bool = True) -> np.ndarray:
                 if entry["list_status"]["status"] in {"completed", "dropped"}
             }
             for (n1, s1, r1), (n2, s2, r2) in combinations(filtered_mal, 2):
+                # Convert from anime ID to row/col number
+                n1 = id_to_order[n1]
+                n2 = id_to_order[n2]
+                # Criteria to assign score
                 if s1 == "completed" and s2 == "dropped":
                     matrix[n1, n2] += 1
                 elif s1 == "dropped" and s2 == "completed":
@@ -295,7 +299,7 @@ def create_table(sample: dict[int, list], save: bool = True) -> np.ndarray:
 
     print("Table constructed")
     if save:
-        with open(file=f"data/table_{TIMESTAMP}_{SAMPLE_SIZE}.npy", mode="wb") as f:
+        with open(file=f"data/table_{TIMESTAMP}_{len(sample)}.npy", mode="wb") as f:
             np.save(f, matrix)
 
     return matrix
