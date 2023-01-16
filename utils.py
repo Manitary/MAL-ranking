@@ -228,12 +228,14 @@ def collect_sample(
                     continue
                 sample[num] = user_mal
                 progress_bar.update(1)
-                # print(f"{len(sample)} - {username}")
             except (KeyboardInterrupt, SystemExit):
                 if save:
                     logging.exception("Interrupted. Saving partial data...")
                     save_sample(sample=sample, invalid=invalid, visited=visited)
                 return sample
+            except KeyError:
+                # Rarely, the 'status' key may be missing for unknown reasons.
+                continue
             except Exception:
                 logging.exception(
                     "An exception occurred while scraping user ID %s", str(num)
