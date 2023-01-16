@@ -2,7 +2,7 @@
 
 import numpy as np
 from pytest import fixture
-from utils import setup_bradley_terry, iterate_parameter
+from utils import setup_bradley_terry, iterate_parameter, create_table
 
 
 @fixture(name="table_one_user_three_anime")
@@ -17,6 +17,21 @@ def fixture_wikipedia_table() -> np.ndarray:
     """Wikipedia example table."""
     table = np.array([[0, 2, 0, 1], [3, 0, 5, 0], [0, 3, 0, 1], [4, 0, 3, 0]])
     yield table
+
+
+@fixture(name="sample_one_user")
+def fixture_sample_one_user() -> dict:
+    """Sample containing one user."""
+    sample = {
+        "test_user": [
+            {
+                "node": {"id": i},
+                "list_status": {"status": "completed", "score": 10 - i},
+            }
+            for i in range(3)
+        ]
+    }
+    yield sample
 
 
 def test_wikipedia_example_1(wikipedia_table: np.ndarray) -> None:
@@ -43,3 +58,14 @@ def test_one_user_three_anime(table_one_user_three_anime: np.ndarray) -> None:
     p, mt, w = setup_bradley_terry(table_one_user_three_anime)
     p = iterate_parameter(p=p, mt=mt, w=w)
     assert p[0] > p[1] > p[2]
+
+
+def test_create_table_one_user(
+    sample_one_user: dict, table_one_user_three_anime: np.ndarray
+) -> None:
+    """Create a model table from one user data."""
+    table = create_table(
+        size=3, id_to_order={i: i for i in range(3)}, sample=sample_one_user, save=False
+    )
+    expected = table_one_user_three_anime
+    assert np.array_equal(table, expected)
