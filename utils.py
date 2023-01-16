@@ -266,39 +266,57 @@ def iterate_parameter(p: np.ndarray, mt: np.ndarray, w: np.ndarray) -> np.ndarra
     return p_new / sum(p_new)
 
 
-def create_table(sample: dict[int, list], save: bool = True) -> np.ndarray:
-    """Return the table used for the Bradley-Terry model for the given sample."""
-    print("Initialising table")
+def load_id_to_order_map() -> dict:
+    """Return the map id->order."""
     with open(FILE_VALID_ANIME_ID, encoding="utf8") as f:
         id_to_order = pickle.load(f)["id"]
-    matrix = np.zeros((len(id_to_order), len(id_to_order)), dtype=int)
+    return id_to_order
+
+
+def filter_entry(id_to_order: dict[int, int], entry: dict) -> tuple:
+    """Filter the relevant values of an entry to analyse."""
+    filtered_entry = tuple(
+        (
+            id_to_order[entry["node"]["id"]],
+            entry["list_status"]["status"],
+            entry["list_status"]["score"],
+        )
+    )
+    return filtered_entry
+
+
+def compare_filtered_entries(entry_1: tuple, entry_2: tuple) -> tuple[int, int]:
+    """Compare two entries and return the corresponding table entry to update."""
+    n1, s1, r1 = entry_1
+    n2, s2, r2 = entry_2
+    if s1 == "completed" and s2 == "dropped":
+        return n1, n2
+    if s1 == "dropped" and s2 == "completed":
+        return n2, n1
+    if r1 > r2 > 0:
+        return n1, n2
+    if r2 > r1 > 0:
+        return n2, n1
+    raise ValueError("Something went wrong")
+
+
+def create_table(
+    size: int, id_to_order: dict[int, int], sample: dict[int, list], save: bool = True
+) -> np.ndarray:
+    """Return the table used for the Bradley-Terry model for the given sample."""
+    print("Initialising table")
+    matrix = np.zeros((size, size), dtype=int)
     with tqdm(total=len(sample)) as progress_bar:
         for num, mal in sample.items():
             progress_bar.set_description(f"Processing user {num}")
             filtered_mal = {
-                tuple(
-                    (
-                        entry["node"]["id"],
-                        entry["list_status"]["status"],
-                        entry["list_status"]["score"],
-                    )
-                )
+                filter_entry(id_to_order, entry)
                 for entry in mal
                 if entry["list_status"]["status"] in {"completed", "dropped"}
             }
-            for (n1, s1, r1), (n2, s2, r2) in combinations(filtered_mal, 2):
-                # Convert from anime ID to row/col number
-                n1 = id_to_order[n1]
-                n2 = id_to_order[n2]
+            for a, b in combinations(filtered_mal, 2):
                 # Criteria to assign score
-                if s1 == "completed" and s2 == "dropped":
-                    matrix[n1, n2] += 1
-                elif s1 == "dropped" and s2 == "completed":
-                    matrix[n2, n1] += 1
-                elif r1 > r2 > 0:
-                    matrix[n1, n2] += 1
-                elif r2 > r1 > 0:
-                    matrix[n2, n1] += 1
+                matrix[compare_filtered_entries(a, b)] += 1
             progress_bar.update(1)
 
     print("Table constructed")
