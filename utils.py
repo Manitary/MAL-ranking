@@ -27,7 +27,13 @@ MAL_USERS = 16169097  # As of 12/01/2023
 LEN_USERS = 8  # Number of digits
 MAL_ANIME = 54225  # As of 12/01/2023
 MIN_LIST_SIZE = 5  # Minimum number of anime watched/dropped to consider a user.
-LINK_USER_ID = "https://myanimelist.net/comments.php?id="
+LINK_USER_ID = "https://myanimelist.net/comments.php?id={}"
+LINK_ANIME_ID = (
+    "https://api.myanimelist.net/v2/anime/{}?fields="
+    "id,title,main_picture,alternative_titles,start_date,end_date,synopsis,"
+    "mean,rank,popularity,num_list_users,num_scoring_users,nsfw,genres,media_type,status,"
+    "num_episodes,start_season,source,average_episode_duration,studios,statistics"
+)
 LINK_USER_LIST = (
     "https://api.myanimelist.net/v2/users/{}/animelist?limit=1000&fields=list_status"
 )
@@ -36,8 +42,10 @@ HEADERS = {
     "X-MAL-CLIENT-ID": os.getenv("CLIENT_ID"),
     "Content-Type": "application/json",
 }
-FILE_INVALID_ID = "data/invalid_user_ids"
-FILE_VISITED_ID = "data/visited_user_ids"
+FILE_INVALID_USER_ID = "data/invalid_user_ids"
+FILE_VISITED_USER_ID = "data/visited_user_ids"
+FILE_VALID_ANIME_ID = "data/valid_anime_ids.json"
+FILE_ANIME_DB = "data/anime.json"
 
 
 @sleep_and_retry
@@ -66,7 +74,7 @@ def get_user_list(username: str) -> list[dict]:
 @limits(calls=1, period=REQUEST_DELAY)
 def get_user_from_id(user_id: int) -> str:
     """Scrape and return the MAL username of a given user ID."""
-    response = requests.get(f"{LINK_USER_ID}{user_id}", timeout=60)
+    response = requests.get(LINK_USER_ID.format(user_id), timeout=60)
     if response.status_code != 200:
         return None
     tree = html.fromstring(response.content)
@@ -81,6 +89,36 @@ def get_user_from_id(user_id: int) -> str:
             user_id,
         )
     return None
+
+
+@sleep_and_retry
+@limits(calls=1, period=REQUEST_DELAY)
+def get_anime_from_id(anime_id: int) -> bool:
+    """Return the MAL anime entry corresponding to the given ID, if it exists."""
+    response = requests.get(LINK_ANIME_ID.format(anime_id), timeout=TIMEOUT)
+    if response.status_code != 200:
+        return None
+    return response.json()
+
+
+def get_all_anime() -> None:
+    """Scrape all anime information.
+
+    Store list of valid IDs and anime data."""
+    id_list = []
+    anime_info = {}
+    for anime_id in tqdm(range(MAL_ANIME)):
+        data = get_anime_from_id(anime_id=anime_id)
+        if data:
+            anime_info[anime_id] = data
+            id_list.append(anime_id)
+    order_to_id = {i: j for i, j in enumerate(id_list)}
+    id_to_order = {j: i for i, j in enumerate(id_list)}
+    anime_list = {"oder": order_to_id, "id": id_to_order}
+    with open(FILE_VALID_ANIME_ID, "w", encoding="utf8") as f:
+        json.dump(anime_list, f)
+    with open(FILE_ANIME_DB, "w", encoding="utf8") as f:
+        json.dump(anime_info, f)
 
 
 def is_list_valid(mal_list: list[dict]) -> bool:
@@ -112,18 +150,18 @@ def save_sample(
 ) -> None:
     """Save a sample to disk."""
     with open(
-        f"data/sample_{TIMESTAMP}_{len(sample)}.txt",
+        f"data/sample_{TIMESTAMP}_{len(sample)}.json",
         "w",
         encoding="utf8",
     ) as f:
         f.write(json.dumps(sample))
     print("Sample saved to disk.")
     if invalid:
-        with open(FILE_INVALID_ID, "wb") as f:
+        with open(FILE_INVALID_USER_ID, "wb") as f:
             pickle.dump(invalid, f)
         print("List of invalid IDs updated.")
     if visited:
-        with open(FILE_VISITED_ID, "wb") as f:
+        with open(FILE_VISITED_USER_ID, "wb") as f:
             pickle.dump(visited, f)
         print("List of visited IDs updated.")
 
@@ -163,8 +201,8 @@ def collect_sample(
     Return:
         sample: a dictionary of user ID -> associated MAL list."""
     sample = {}
-    visited = get_set_data(FILE_VISITED_ID)
-    invalid = get_set_data(FILE_INVALID_ID)
+    visited = get_set_data(FILE_VISITED_USER_ID)
+    invalid = get_set_data(FILE_INVALID_USER_ID)
     count = 0
     print("Collecting sample")
     with tqdm(total=size) as progress_bar:
