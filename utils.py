@@ -351,7 +351,7 @@ def load_samples(*filenames: str) -> dict[int, list]:
     File names are sorted; with proper naming this allows duplicate entries
     to only keep the most up-to-date version, if any exist."""
     sample = {}
-    for filename in sorted(tqdm(filenames)):
+    for filename in tqdm(sorted(filenames)):
         with open(file=filename, encoding="utf8") as f:
             sample |= json.load(f)
     return sample
