@@ -364,3 +364,11 @@ def yield_samples(*filenames: str) -> Iterator[dict[int, list]]:
     for filename in tqdm(filenames):
         with open(file=filename, encoding="utf8") as f:
             yield json.load(f)
+
+
+def get_anime_ids_from_sample(sample: dict) -> set[int]:
+    """Retrieve the anime IDs that appear in users' lists."""
+    sample_anime_ids = {
+        entry["node"]["id"] for _, user_data in sample.items() for entry in user_data
+    }
+    return sample_anime_ids

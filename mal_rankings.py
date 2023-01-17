@@ -12,8 +12,8 @@ from utils import (
     create_table,
     setup_bradley_terry,
     iterate_parameter,
-    load_id_to_order_map,
     load_samples,
+    get_anime_ids_from_sample,
     TIMESTAMP,
 )
 
@@ -74,7 +74,13 @@ def main(
 ) -> None:
     """Do the entire calculation from scratch."""
     sample = load_samples(glob.glob(sample_path))
-    id_to_order = load_id_to_order_map()
+    sample_anime_ids = get_anime_ids_from_sample(sample)
+    id_to_order = {j: i for i, j in enumerate(sorted(sample_anime_ids))}
+    with open(f"data/{timestamp}_{len(sample)}/id_order_map", "wb") as f:
+        pickle.dump(id_to_order, f)
+    order_to_id = dict(enumerate(sorted(sample_anime_ids)))
+    with open(f"data/{timestamp}_{len(sample)}/order_id_map", "wb") as f:
+        pickle.dump(order_to_id, f)
     table = create_table(
         size=len(id_to_order), id_to_order=id_to_order, sample=sample, save=save
     )
