@@ -158,7 +158,7 @@ def save_sample(
 ) -> None:
     """Save a sample to disk."""
     with open(
-        f"data/sample_{TIMESTAMP}_{len(sample)}.json",
+        f"data/samples/sample_{TIMESTAMP}_{len(sample)}.json",
         "w",
         encoding="utf8",
     ) as f:
