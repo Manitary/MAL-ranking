@@ -110,17 +110,23 @@ def get_all_anime() -> None:
     id_list = []
     anime_info = {}
     for anime_id in tqdm(range(MAL_ANIME)):
-        data = get_anime_from_id(anime_id=anime_id)
-        if data:
-            anime_info[anime_id] = data
-            id_list.append(anime_id)
-    order_to_id = {i: j for i, j in enumerate(id_list)}
+        try:
+            data = get_anime_from_id(anime_id=anime_id)
+            if data:
+                anime_info[anime_id] = data
+                id_list.append(anime_id)
+        except Exception:
+            logging.exception("\nThe entry %s caused an exception\n", anime_id)
+            continue
+
+    order_to_id = dict(enumerate(id_list))
     id_to_order = {j: i for i, j in enumerate(id_list)}
     anime_list = {"order": order_to_id, "id": id_to_order}
     with open(FILE_VALID_ANIME_ID, "wb") as f:
         pickle.dump(anime_list, f)
     with open(FILE_ANIME_DB, "wb") as f:
         pickle.dump(anime_info, f)
+    return anime_list, anime_info
 
 
 def is_list_valid(mal_list: list[dict]) -> bool:
