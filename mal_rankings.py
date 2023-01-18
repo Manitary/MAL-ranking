@@ -134,7 +134,7 @@ if __name__ == "__main__":
         help=f"number of iterations before saving partial data, default={SAVE_EVERY}",
     )
     parser.add_argument(
-        "--p",
+        "-p",
         "--prepare",
         action="store_true",
     )
