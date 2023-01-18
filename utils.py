@@ -303,7 +303,8 @@ def compare_filtered_entries(entry_1: tuple, entry_2: tuple) -> tuple[int, int]:
         return n1, n2
     if r2 > r1 > 0:
         return n2, n1
-    raise ValueError("Something went wrong")
+    return None, None
+    # raise ValueError("Something went wrong")
 
 
 def create_table(
@@ -314,7 +315,7 @@ def create_table(
     matrix = np.zeros((size, size), dtype=int)
     with tqdm(total=len(sample)) as progress_bar:
         for num, mal in sample.items():
-            progress_bar.set_description(f"Processing user {num}")
+            progress_bar.set_description(f"Processing user {int(num):{LEN_USERS}}")
             filtered_mal = {
                 filter_entry(id_to_order, entry)
                 for entry in mal
@@ -322,12 +323,14 @@ def create_table(
             }
             for a, b in combinations(filtered_mal, 2):
                 # Criteria to assign score
-                matrix[compare_filtered_entries(a, b)] += 1
+                row, col = compare_filtered_entries(a, b)
+                if row is not None:
+                    matrix[row, col] += 1
             progress_bar.update(1)
 
     print("Table constructed")
     if save:
-        with open(file=f"data/table_{TIMESTAMP}_{len(sample)}.npy", mode="wb") as f:
+        with open(f"data/{TIMESTAMP}_{len(sample)}/table.npy", "wb") as f:
             np.save(f, matrix)
 
     return matrix
