@@ -66,9 +66,8 @@ def endless_iteration(
             np.savez(f, *p_list)
 
 
-def main(
+def initialise(
     sample_path: str = SAMPLE_PATH,
-    num_iter: int = SAVE_EVERY,
     save: bool = True,
     timestamp: str = TIMESTAMP,
 ) -> None:
@@ -92,26 +91,29 @@ def main(
         pickle.dump(mt, f)
     with open(f"data/{timestamp}_{len(sample)}/w", "wb") as f:
         pickle.dump(w, f)
-    endless_iteration(
-        datum=(p, mt, w),
-        num_iter=num_iter,
-        timestamp=timestamp,
-        sample_size=len(sample),
-    )
+    with open(f"data/{timestamp}_{len(sample)}/p", "wb") as f:
+        pickle.dump(p, f)
 
 
-def resume(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
+def iterate(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
     """Resume computation of the parameters from the last available iteration."""
     with open(glob.glob(f"data/{timestamp}_*/mt"), "rb") as f:
         mt = pickle.load(f)
     with open(glob.glob(f"data/{timestamp}_*/w"), "rb") as f:
         w = pickle.load(f)
-
-    filename = sorted(glob.glob(f"data/{timestamp}_*/parameter_*.npy"))[-1]
-    size = re.findall(r"_(\d+)\\parameter", filename)
-    num = re.findall(r"_(\d+)\.npy", filename)
-    with open(filename, "rb") as f:
-        p = pickle.load(f)
+    filenames = sorted(glob.glob(f"data/{timestamp}_*/parameter_*.npy"))
+    if filenames:
+        filename = filenames[-1]
+        size = re.findall(r"_(\d+)\\parameter", filename)
+        num = re.findall(r"_(\d+)\.npy", filename)
+        with open(filename, "rb") as f:
+            p = pickle.load(f)
+    else:
+        filename = glob.glob(f"data/{timestamp}_*/p")
+        size = re.findall(r"_(\d+)\\parameter", filename)
+        num = 0
+        with open(filename, "rb") as f:
+            p = pickle.load(f)
     endless_iteration(
         datum=(p, mt, w),
         num_iter=num_iter,
@@ -132,15 +134,21 @@ if __name__ == "__main__":
         help=f"number of iterations before saving partial data, default={SAVE_EVERY}",
     )
     parser.add_argument(
-        "-r",
-        "--resume",
-        metavar="R",
+        "--p",
+        "--prepare",
+        metavar="P",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-i",
+        "--iterate",
+        metavar="I",
         type=str,
         default="",
-        help="data folder, default has type YYMMDD-HHMMSS_num",
+        help="timestamp on the data folder, by default it has type YYMMDD-HHMMSS",
     )
     args = parser.parse_args()
-    if args.resume:
-        resume(timestamp=args.resume, num_iter=args.number)
-    else:
-        main(num_iter=args.number)
+    if args.prepare:
+        initialise()
+    elif args.iterate:
+        iterate(timestamp=args.iterate, num_iter=args.number)
