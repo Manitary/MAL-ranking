@@ -1,10 +1,10 @@
 """Estimate the parameters of the Bradley-Terry model for a sample of MAL users."""
 
 import re
-import gc
 import glob
 import argparse
 import pickle
+from pathlib import Path
 from itertools import count
 import numpy as np
 from tqdm import tqdm
@@ -72,9 +72,10 @@ def initialise(
     timestamp: str = TIMESTAMP,
 ) -> None:
     """Do the entire calculation from scratch."""
-    sample = load_samples(glob.glob(sample_path))
+    sample = load_samples(*glob.glob(sample_path))
     sample_anime_ids = get_anime_ids_from_sample(sample)
     id_to_order = {j: i for i, j in enumerate(sorted(sample_anime_ids))}
+    Path(f"data/{timestamp}_{len(sample)}").mkdir(parents=True, exist_ok=True)
     with open(f"data/{timestamp}_{len(sample)}/id_order_map", "wb") as f:
         pickle.dump(id_to_order, f)
     order_to_id = dict(enumerate(sorted(sample_anime_ids)))
@@ -84,36 +85,33 @@ def initialise(
         size=len(id_to_order), id_to_order=id_to_order, sample=sample, save=save
     )
     p, mt, w = setup_bradley_terry(matrix=table)
-    # Force initial table deletion
-    del table
-    gc.collect()
-    with open(f"data/{timestamp}_{len(sample)}/mt", "wb") as f:
-        pickle.dump(mt, f)
-    with open(f"data/{timestamp}_{len(sample)}/w", "wb") as f:
-        pickle.dump(w, f)
-    with open(f"data/{timestamp}_{len(sample)}/p", "wb") as f:
-        pickle.dump(p, f)
+    with open(f"data/{timestamp}_{len(sample)}/mt.npy", "wb") as f:
+        np.save(f, mt)
+    with open(f"data/{timestamp}_{len(sample)}/w.npy", "wb") as f:
+        np.save(f, w)
+    with open(f"data/{timestamp}_{len(sample)}/p.npy", "wb") as f:
+        np.save(f, p)
 
 
 def iterate(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
     """Resume computation of the parameters from the last available iteration."""
-    with open(glob.glob(f"data/{timestamp}_*/mt"), "rb") as f:
-        mt = pickle.load(f)
-    with open(glob.glob(f"data/{timestamp}_*/w"), "rb") as f:
-        w = pickle.load(f)
+    with open(glob.glob(f"data/{timestamp}_*/mt.npy")[0], "rb") as f:
+        mt = np.load(f)
+    with open(glob.glob(f"data/{timestamp}_*/w.npy")[0], "rb") as f:
+        w = np.load(f)
     filenames = sorted(glob.glob(f"data/{timestamp}_*/parameter_*.npy"))
     if filenames:
         filename = filenames[-1]
-        size = re.findall(r"_(\d+)\\parameter", filename)
-        num = re.findall(r"_(\d+)\.npy", filename)
+        size = re.findall(r"_(\d+)\\parameter", filename)[0]
+        num = int(re.findall(r"_(\d+)\.npy", filename)[0])
         with open(filename, "rb") as f:
-            p = pickle.load(f)
+            p = np.load(f)
     else:
-        filename = glob.glob(f"data/{timestamp}_*/p")
-        size = re.findall(r"_(\d+)\\parameter", filename)
+        filename = glob.glob(f"data/{timestamp}_*/p.npy")[0]
+        size = re.findall(r"_(\d+)\\p", filename)[0]
         num = 0
         with open(filename, "rb") as f:
-            p = pickle.load(f)
+            p = np.load(f)
     endless_iteration(
         datum=(p, mt, w),
         num_iter=num_iter,
