@@ -6,7 +6,7 @@ import glob
 import argparse
 import pickle
 from itertools import count
-from numpy import np
+import numpy as np
 from tqdm import tqdm
 from utils import (
     create_table,
@@ -27,7 +27,7 @@ def step_iteration(
     mt: np.ndarray,
     w: np.ndarray,
     num_iter: int,
-) -> tuple(np.ndarray, list[np.ndarray]):
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """Iterate the parameter num_iter times.
 
     Display the max delta of a single parameter between first and last iteration."""
@@ -136,7 +136,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--p",
         "--prepare",
-        metavar="P",
         action="store_true",
     )
     parser.add_argument(
