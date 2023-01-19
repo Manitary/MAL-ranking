@@ -4,6 +4,7 @@ import re
 import glob
 import argparse
 import pickle
+import json
 from pathlib import Path
 from itertools import count
 import numpy as np
@@ -128,6 +129,32 @@ def iterate(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
     )
 
 
+def extract_list_from_parameter(
+    p: np.ndarray, f: dict[int, int], mal: dict[int, dict]
+) -> list[tuple[int, float]]:
+    """Transform the parameter vector into a list of pairs (ID, parameter)."""
+    return sorted(
+        ((f[i], mal[f[i]]["title"], v) for i, v in enumerate(p) if f[i] in mal),
+        key=lambda x: x[2],
+        reverse=True,
+    )
+
+
+def extract_list(timestamp: str) -> None:
+    """Compute the sorted list of anime IDs from the computed parameters."""
+    path = glob.glob(f"data/{timestamp}_*")[0]
+    with open("data/anime", "rb") as f:
+        mal = pickle.load(f)
+    with open(f"{path}/reduced_map_order_id", "rb") as f:
+        map_order_id = pickle.load(f)
+    for p_path in tqdm(glob.glob(f"{path}/parameter_*.npy")):
+        num = int(re.findall(r"parameter_(\d+).npy", p_path)[0])
+        with open(p_path, "rb") as f:
+            p = np.load(f)
+        with open(f"{path}/list_{num}.json", "w", encoding="utf8") as f:
+            json.dump(extract_list_from_parameter(p, map_order_id, mal), f)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -159,8 +186,18 @@ if __name__ == "__main__":
         default=0,
         help="cutoff of total comparisons to include an entry, default=0",
     )
+    parser.add_argument(
+        "-l",
+        "--list",
+        metavar="L",
+        type=str,
+        default="",
+        help="timestamp on the data folder, by default it has type YYMMDD-HHMMSS",
+    )
     args = parser.parse_args()
     if args.prepare:
         initialise(cutoff=args.cutoff)
     elif args.iterate:
         iterate(timestamp=args.iterate, num_iter=args.number)
+    elif args.list:
+        extract_list(timestamp=args.list)
