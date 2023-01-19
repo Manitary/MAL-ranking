@@ -161,6 +161,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.prepare:
-        initialise()
+        initialise(cutoff=args.cutoff)
     elif args.iterate:
         iterate(timestamp=args.iterate, num_iter=args.number)
