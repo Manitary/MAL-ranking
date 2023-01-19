@@ -70,21 +70,28 @@ def initialise(
     sample_path: str = SAMPLE_PATH,
     save: bool = True,
     timestamp: str = TIMESTAMP,
+    cutoff: int = 0,
 ) -> None:
     """Do the entire calculation from scratch."""
     sample = load_samples(*glob.glob(sample_path))
     sample_anime_ids = get_anime_ids_from_sample(sample)
     id_to_order = {j: i for i, j in enumerate(sorted(sample_anime_ids))}
     Path(f"data/{timestamp}_{len(sample)}").mkdir(parents=True, exist_ok=True)
-    with open(f"data/{timestamp}_{len(sample)}/id_order_map", "wb") as f:
+    with open(f"data/{timestamp}_{len(sample)}/map_id_order", "wb") as f:
         pickle.dump(id_to_order, f)
     order_to_id = dict(enumerate(sorted(sample_anime_ids)))
-    with open(f"data/{timestamp}_{len(sample)}/order_id_map", "wb") as f:
+    with open(f"data/{timestamp}_{len(sample)}/map_order_id", "wb") as f:
         pickle.dump(order_to_id, f)
     table = create_table(
         size=len(id_to_order), id_to_order=id_to_order, sample=sample, save=save
     )
-    p, mt, w = setup_bradley_terry(matrix=table)
+    p, mt, w, _, new_to_old = setup_bradley_terry(matrix=table, cutoff=cutoff)
+    reduced_order_to_id = {i: order_to_id[new_to_old[i]] for i in range(p.shape[0])}
+    reduced_id_to_order = {j: i for i, j in reduced_order_to_id.items()}
+    with open(f"data/{timestamp}_{len(sample)}/reduced_map_id_order", "wb") as f:
+        pickle.dump(reduced_id_to_order, f)
+    with open(f"data/{timestamp}_{len(sample)}/reduced_map_order_id", "wb") as f:
+        pickle.dump(reduced_order_to_id, f)
     with open(f"data/{timestamp}_{len(sample)}/mt.npy", "wb") as f:
         np.save(f, mt)
     with open(f"data/{timestamp}_{len(sample)}/w.npy", "wb") as f:
@@ -143,6 +150,14 @@ if __name__ == "__main__":
         type=str,
         default="",
         help="timestamp on the data folder, by default it has type YYMMDD-HHMMSS",
+    )
+    parser.add_argument(
+        "-c",
+        "--cutoff",
+        metavar="C",
+        type=int,
+        default=0,
+        help="cutoff of total comparisons to include an entry, default=0",
     )
     args = parser.parse_args()
     if args.prepare:

@@ -315,7 +315,7 @@ def create_table(
     matrix = np.zeros((size, size), dtype=int)
     with tqdm(total=len(sample)) as progress_bar:
         for num, mal in sample.items():
-            progress_bar.set_description(f"Processing user {int(num):{LEN_USERS}}")
+            progress_bar.set_description(f"Processing user {num:{LEN_USERS}}")
             filtered_mal = {
                 filter_entry(id_to_order, entry)
                 for entry in mal
@@ -336,16 +336,30 @@ def create_table(
     return matrix
 
 
+def delete_row_cols(matrix: np.ndarray, indices: list[int]) -> np.ndarray:
+    """Return the given matrix reduced by removing a given set of indices."""
+    ans = np.take(matrix, indices, 0)
+    ans = np.take(ans, indices, 1)
+    return ans
+
+
 def setup_bradley_terry(
-    matrix: np.ndarray,
+    matrix: np.ndarray, cutoff: int = 0
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return the arrays needed to compute the parameters from the given table."""
     print("Constructing arrays")
     mt = matrix + matrix.transpose()
+    sums = np.sum(mt, axis=0)
+    indices = [i for i, x in enumerate(sums) if x > cutoff]
+    new_to_old = dict(enumerate(indices))
+    old_to_new = {j: i for i, j in enumerate(indices)}
+    matrix = delete_row_cols(matrix, indices)
+    mt = delete_row_cols(mt, indices)
+
     w = np.sum(matrix, axis=1)
-    p = np.fromiter(iter=(0 if x == 0 else 1 for x in w), dtype=float)
+    p = np.ones(w.shape, dtype=float) / w.shape[0]
     print("Setup completed")
-    return p, mt, w
+    return p, mt, w, old_to_new, new_to_old
 
 
 def load_samples(*filenames: str) -> dict[int, list]:
@@ -372,6 +386,9 @@ def yield_samples(*filenames: str) -> Iterator[dict[int, list]]:
 def get_anime_ids_from_sample(sample: dict) -> set[int]:
     """Retrieve the anime IDs that appear in users' lists."""
     sample_anime_ids = {
-        entry["node"]["id"] for _, user_data in sample.items() for entry in user_data
+        entry["node"]["id"]
+        for _, user_data in sample.items()
+        for entry in user_data
+        if entry["list_status"]["status"] != "plan_to_watch"
     }
     return sample_anime_ids

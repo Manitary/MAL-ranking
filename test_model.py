@@ -49,7 +49,7 @@ def fixture_sample_one_user() -> dict:
 
 def test_wikipedia_example_1(wikipedia_table: np.ndarray) -> None:
     """Example case from Wikipedia, 1 iteration."""
-    p, mt, w = setup_bradley_terry(wikipedia_table)
+    p, mt, w, *_ = setup_bradley_terry(wikipedia_table)
     p = iterate_parameter(p=p, mt=mt, w=w)
     p = tuple((round(x, 3) for x in p))
     expected = (0.148, 0.304, 0.164, 0.384)
@@ -58,7 +58,7 @@ def test_wikipedia_example_1(wikipedia_table: np.ndarray) -> None:
 
 def test_wikipedia_example_20(wikipedia_table: np.ndarray) -> None:
     """Example case from Wikipedia, 20 iterations."""
-    p, mt, w = setup_bradley_terry(wikipedia_table)
+    p, mt, w, *_ = setup_bradley_terry(wikipedia_table)
     for _ in range(20):
         p = iterate_parameter(p=p, mt=mt, w=w)
     p = tuple((round(x, 3) for x in p))
@@ -68,14 +68,14 @@ def test_wikipedia_example_20(wikipedia_table: np.ndarray) -> None:
 
 def test_one_user_three_anime(table_one_user_three_anime: np.ndarray) -> None:
     """Test a simple case: 1 user, 3 anime ranked."""
-    p, mt, w = setup_bradley_terry(table_one_user_three_anime)
+    p, mt, w, *_ = setup_bradley_terry(table_one_user_three_anime)
     p = iterate_parameter(p=p, mt=mt, w=w)
     assert p[0] > p[1] > p[2]
 
 
 def test_two_users_four_anime(table_two_users_four_anime: np.ndarray) -> None:
     """Test a simple case: 2 users, 4 anime ranked."""
-    p, mt, w = setup_bradley_terry(table_two_users_four_anime)
+    p, mt, w, *_ = setup_bradley_terry(table_two_users_four_anime)
     for _ in range(5):
         p = iterate_parameter(p=p, mt=mt, w=w)
         assert p[0] > p[1] == p[2] > p[3]
