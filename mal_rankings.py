@@ -134,8 +134,12 @@ def extract_list_from_parameter(
 ) -> list[tuple[int, float]]:
     """Transform the parameter vector into a list of pairs (ID, parameter)."""
     return sorted(
-        ((f[i], mal[f[i]]["title"], v) for i, v in enumerate(p) if f[i] in mal),
-        key=lambda x: x[2],
+        (
+            {"mal_ID": f[i], "title": mal[f[i]]["title"], "parameter": v}
+            for i, v in enumerate(p)
+            if f[i] in mal
+        ),
+        key=lambda x: x["parameter"],
         reverse=True,
     )
 
