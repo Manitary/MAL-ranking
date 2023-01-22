@@ -51,7 +51,7 @@ function fillTable(elementID, dataSelectorID, cutoffSelectorID) {
                 '<td>' + anime[id]['popularity'] + '</td>' +
                 '<td>' + (anime[id]['score'] || '-') + '</td>' +
                 '<td>' + entry['num_comparisons'] + '</td>' +
-                '<td>' + entry['pct_lists'] + '</td>' +
+                '<td>' + entry['num_lists'] + ' (' + entry['pct_lists'] + ')' + '</td>' +
                 '<td>' + entry['parameter'] + '</td>' +
                 '<td>' + entry['rel_error_pct'] + '</td>' +
                 '<td>' + anime[id]['title'] + '</td>' +
