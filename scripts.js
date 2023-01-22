@@ -31,8 +31,12 @@ function fillTable(elementID, dataSelectorID, cutoffSelectorID) {
     table.innerHTML = '<tr id="tableHeaders">' +
         '<th>Rank</th>' +
         '<th>MAL Rank</th>' + 
+        '<th>MAL Popularity Rank</th>' +
         '<th>MAL Score</th>' +
+        '<th># Comparisons</th>' +
+        '<th>Sample popularity</th>' + 
         '<th>Parameter</th>' +
+        '<th>Error margin</th>' +
         '<th>Title</>' +
         '<th>English title</>' +
         '</tr>';
@@ -44,8 +48,12 @@ function fillTable(elementID, dataSelectorID, cutoffSelectorID) {
             var tr = document.createElement('tr');
             tr.innerHTML = '<td>' + i + '</td>' +
                 '<td>' + anime[id]['rank'] + '</td>' +
+                '<td>' + anime[id]['popularity'] + '</td>' +
                 '<td>' + (anime[id]['score'] || '-') + '</td>' +
+                '<td>' + entry['num_comparisons'] + '</td>' +
+                '<td>' + entry['pct_lists'] + '</td>' +
                 '<td>' + entry['parameter'] + '</td>' +
+                '<td>' + entry['rel_error_pct'] + '</td>' +
                 '<td>' + anime[id]['title'] + '</td>' +
                 '<td>' + (anime[id]['title_en'] || '-') + '</td>';
             table.appendChild(tr);
