@@ -157,6 +157,7 @@ def convert_parameter_for_website(
     f: dict[int, int],
     mal: dict[int, dict],
     sample: dict,
+    e: np.ndarray,
 ) -> None:
     """Compute data used for the website from the results."""
     counter = Counter()
@@ -172,6 +173,7 @@ def convert_parameter_for_website(
                 "num_comparisons": int(np.sum(mt[i])),
                 "num_lists": counter[f[i]],
                 "pct_lists": round(counter[f[i]] / len(sample) * 100, 2),
+                "rel_error": round(float(e[i]), 2),
             }
             for i, v in enumerate(p)
             if f[i] in mal
@@ -189,8 +191,11 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
     path = glob.glob(f"data/{timestamp}_*")[0]
     num = int(re.findall(r"_(\d+)$", path)[0])
     list_p = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[-1]
+    list_e = sorted(glob.glob(f"{path}/error_*.npy"), key=lambda x: (len(x), x))[-1]
     with open(list_p, "rb") as f:
         p = np.load(f)
+    with open(list_e, "rb") as f:
+        e = np.load(f)
     with open(f"{path}/mt.npy", "rb") as f:
         mt = np.load(f)
     with open(f"{path}/reduced_map_order_id", "rb") as f:
@@ -200,7 +205,7 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
     with open(f"webpage-data/{num}_{cutoff}.json", "w", encoding="utf8") as f:
         json.dump(
             convert_parameter_for_website(
-                p=p, mt=mt, f=map_order_id, mal=anime, sample=sample
+                p=p, mt=mt, f=map_order_id, mal=anime, sample=sample, e=e
             ),
             f,
         )
