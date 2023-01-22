@@ -295,16 +295,15 @@ def compare_filtered_entries(entry_1: tuple, entry_2: tuple) -> tuple[int, int]:
     """Compare two entries and return the corresponding table entry to update."""
     n1, s1, r1 = entry_1
     n2, s2, r2 = entry_2
-    if s1 == "completed" and s2 == "dropped":
-        return n1, n2
-    if s1 == "dropped" and s2 == "completed":
-        return n2, n1
     if r1 > r2 > 0:
         return n1, n2
     if r2 > r1 > 0:
         return n2, n1
+    if s1 == "completed" and s2 == "dropped":
+        return n1, n2
+    if s1 == "dropped" and s2 == "completed":
+        return n2, n1
     return None, None
-    # raise ValueError("Something went wrong")
 
 
 def create_table(
