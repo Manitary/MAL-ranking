@@ -80,6 +80,8 @@ def initialise(
     sample_anime_ids = get_anime_ids_from_sample(sample)
     id_to_order = {j: i for i, j in enumerate(sorted(sample_anime_ids))}
     Path(f"data/{timestamp}_{len(sample)}").mkdir(parents=True, exist_ok=True)
+    with open(f"data/{timestamp}_{len(sample)}/cutoff", "w", encoding="utf8") as f:
+        f.write(str(cutoff))
     with open(f"data/{timestamp}_{len(sample)}/map_id_order", "wb") as f:
         pickle.dump(id_to_order, f)
     order_to_id = dict(enumerate(sorted(sample_anime_ids)))
@@ -91,8 +93,6 @@ def initialise(
     p, mt, w, _, new_to_old = setup_bradley_terry(matrix=table, cutoff=cutoff)
     reduced_order_to_id = {i: order_to_id[new_to_old[i]] for i in range(p.shape[0])}
     reduced_id_to_order = {j: i for i, j in reduced_order_to_id.items()}
-    with open(f"data/{timestamp}_{len(sample)}/cutoff", "w", encoding="utf8") as f:
-        f.write(cutoff)
     with open(f"data/{timestamp}_{len(sample)}/reduced_map_id_order", "wb") as f:
         pickle.dump(reduced_id_to_order, f)
     with open(f"data/{timestamp}_{len(sample)}/reduced_map_order_id", "wb") as f:
