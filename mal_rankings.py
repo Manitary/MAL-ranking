@@ -68,6 +68,8 @@ def endless_iteration(
             np.savez(f, *p_list)
         with open(f"data/{timestamp}_{sample_size}/last_delta_{marker}.npy", "wb") as f:
             np.save(f, last_delta)
+        with open(f"data/{timestamp}_{sample_size}/error_{marker}.npy", "wb") as f:
+            np.save(f, last_delta / p * 100)
 
 
 def initialise(
