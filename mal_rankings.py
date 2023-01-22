@@ -34,16 +34,16 @@ def step_iteration(
 
     Display the max delta of a single parameter between first and last iteration."""
     p_list = [np.copy(p)]
-    old_p = np.copy(p)
     for _ in tqdm(range(num_iter)):
         p = iterate_parameter(p=p, mt=mt, w=w)
         p_list.append(np.copy(p))
-    delta = np.abs(old_p - p)
+    delta = np.abs(p - p_list[0])
+    last_delta = np.abs(p_list[-1] - p_list[-2])
     print(
-        f"""Iteration max delta: {np.amax(delta)}
-    at position {np.argmax(delta)}"""
+        f"""Iteration max delta: {np.amax(delta)} at position {np.argmax(delta)}
+Last step max delta: {np.amax(last_delta)} at position {np.argmax(delta)}"""
     )
-    return p, p_list
+    return p, p_list, delta, last_delta
 
 
 def endless_iteration(
@@ -61,11 +61,13 @@ def endless_iteration(
     p, mt, w = datum
     for i in count(start=1):
         marker = start + i * num_iter
-        p, p_list = step_iteration(p=p, mt=mt, w=w, num_iter=num_iter)
+        p, p_list, _, last_delta = step_iteration(p=p, mt=mt, w=w, num_iter=num_iter)
         with open(f"data/{timestamp}_{sample_size}/parameter_{marker}.npy", "wb") as f:
             np.save(f, p)
         with open(f"data/{timestamp}_{sample_size}/parameters_{marker}.npz", "wb") as f:
             np.savez(f, *p_list)
+        with open(f"data/{timestamp}_{sample_size}/last_delta_{marker}.npy", "wb") as f:
+            np.save(f, last_delta)
 
 
 def initialise(
@@ -187,7 +189,6 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
     list_file = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[
         -1
     ]
-    print(list_file)
     with open(list_file, "rb") as f:
         p = np.load(f)
     with open(f"{path}/mt.npy", "rb") as f:
