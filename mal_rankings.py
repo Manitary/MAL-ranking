@@ -68,7 +68,7 @@ def endless_iteration(
             np.savez(f, *p_list)
         with open(f"data/{timestamp}_{sample_size}/last_delta_{marker}.npy", "wb") as f:
             np.save(f, last_delta)
-        with open(f"data/{timestamp}_{sample_size}/error_{marker}.npy", "wb") as f:
+        with open(f"data/{timestamp}_{sample_size}/error_pct_{marker}.npy", "wb") as f:
             np.save(f, np.abs(last_delta - p) / p * 100)
 
 
@@ -172,8 +172,8 @@ def convert_parameter_for_website(
                 "parameter": v,
                 "num_comparisons": int(np.sum(mt[i])),
                 "num_lists": counter[f[i]],
-                "pct_lists": round(counter[f[i]] / len(sample) * 100, 2),
-                "rel_error": round(float(e[i]), 2),
+                "pct_lists": counter[f[i]] / len(sample) * 100,
+                "rel_error_pct": float(e[i]),
             }
             for i, v in enumerate(p)
             if f[i] in mal
@@ -191,7 +191,7 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
     path = glob.glob(f"data/{timestamp}_*")[0]
     num = int(re.findall(r"_(\d+)$", path)[0])
     list_p = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[-1]
-    list_e = sorted(glob.glob(f"{path}/error_*.npy"), key=lambda x: (len(x), x))[-1]
+    list_e = sorted(glob.glob(f"{path}/error_pct_*.npy"), key=lambda x: (len(x), x))[-1]
     with open(list_p, "rb") as f:
         p = np.load(f)
     with open(list_e, "rb") as f:
