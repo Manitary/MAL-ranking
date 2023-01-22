@@ -1,9 +1,26 @@
+:root {
+  --colour-bg: #202124;
+  --colour-fg: #E8EAED;
+}
+
+@media (prefer-color-scheme: light) {
+  :root {
+    --colour-bg: #ffffff;
+    --colour-fg: #000000;
+  }
+}
+
+body {
+  background-color: var(--colour-bg);
+  color: var(--colour-fg);
+}
+
 .child {
     display: inline-block;
-  }
+}
 
 table {
-  border: 2px solid black;
+  border: 2px solid var(--colour-fg);
   border-collapse: collapse;
 }
 tr {
