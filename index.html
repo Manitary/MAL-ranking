@@ -13,7 +13,7 @@
     Having anime without a lot of comparisons heavily impacts the speed of convergence of the parameters to their real values.
     <div class="slidercontainer">
         <div class="child">
-            <input id="dataSelector" type="range" min="0" max="4" value="4" class="slider">
+            <input id="dataSelector" type="range" min="0" max="11" value="11" class="slider">
         </div>
         <div class="child" id="dataSelectorText"></div>
     </div>
@@ -42,7 +42,7 @@
         sliderTextUpdate("cutoffSelector", "cutoffSelectorText");
         sliderSelectData("dataSelector");
         sliderFilter("cutoffSelector", "dataSelector");
-        fetchData(4);
+        fetchData(11);
     </script>
 </body>
 </html>
