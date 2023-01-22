@@ -69,7 +69,7 @@ def endless_iteration(
         with open(f"data/{timestamp}_{sample_size}/last_delta_{marker}.npy", "wb") as f:
             np.save(f, last_delta)
         with open(f"data/{timestamp}_{sample_size}/error_{marker}.npy", "wb") as f:
-            np.save(f, last_delta / p * 100)
+            np.save(f, np.abs(last_delta - p) / p * 100)
 
 
 def initialise(
@@ -188,10 +188,8 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
         anime = pickle.load(f)
     path = glob.glob(f"data/{timestamp}_*")[0]
     num = int(re.findall(r"_(\d+)$", path)[0])
-    list_file = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[
-        -1
-    ]
-    with open(list_file, "rb") as f:
+    list_p = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[-1]
+    with open(list_p, "rb") as f:
         p = np.load(f)
     with open(f"{path}/mt.npy", "rb") as f:
         mt = np.load(f)
