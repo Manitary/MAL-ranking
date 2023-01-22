@@ -22,7 +22,6 @@ from utils import (
 SAMPLE_PATH = "data/samples/sample_*.json"
 ANIME_PATH = "data/anime"
 SAVE_EVERY = 50
-# MAX_DELTA = 0.001
 
 
 def step_iteration(
@@ -168,6 +167,7 @@ def convert_parameter_for_website(
                 "parameter": v,
                 "num_comparisons": int(np.sum(mt[i])),
                 "num_lists": counter[f[i]],
+                "pct_lists": round(counter[f[i]] / len(sample) * 100, 2),
             }
             for i, v in enumerate(p)
             if f[i] in mal
