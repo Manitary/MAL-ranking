@@ -7,6 +7,7 @@ import pickle
 import json
 from pathlib import Path
 from itertools import count
+from collections import Counter
 import numpy as np
 from tqdm import tqdm
 from utils import (
@@ -19,6 +20,7 @@ from utils import (
 )
 
 SAMPLE_PATH = "data/samples/sample_*.json"
+ANIME_PATH = "data/anime"
 SAVE_EVERY = 50
 # MAX_DELTA = 0.001
 
@@ -132,7 +134,7 @@ def iterate(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
 def extract_list_from_parameter(
     p: np.ndarray, f: dict[int, int], mal: dict[int, dict]
 ) -> list[tuple[int, float]]:
-    """Transform the parameter vector into a list of pairs (ID, parameter)."""
+    """Transform the parameter vector into a list of dictionaries (ID, title, parameter)."""
     return sorted(
         (
             {"mal_ID": f[i], "title": mal[f[i]]["title"], "parameter": v}
@@ -142,6 +144,63 @@ def extract_list_from_parameter(
         key=lambda x: x["parameter"],
         reverse=True,
     )
+
+
+def convert_parameter_for_website(
+    p: np.ndarray,
+    mt: np.ndarray,
+    f: dict[int, int],
+    mal: dict[int, dict],
+    sample: dict,
+) -> None:
+    """Compute data used for the website from the results."""
+    counter = Counter()
+    for _, user_list in sample.items():
+        for entry in user_list:
+            if entry["list_status"]["status"] in {"completed", "dropped"}:
+                counter[entry["node"]["id"]] += 1
+    return sorted(
+        (
+            {
+                "mal_ID": f[i],
+                "parameter": v,
+                "num_comparisons": int(np.sum(mt[i])),
+                "num_lists": counter[f[i]],
+            }
+            for i, v in enumerate(p)
+            if f[i] in mal
+        ),
+        key=lambda x: x["parameter"],
+        reverse=True,
+    )
+
+
+def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> None:
+    """Compute most recent data making it usable for the website."""
+    sample = load_samples(*glob.glob(sample_path))
+    with open("data/anime", "rb") as f:
+        anime = pickle.load(f)
+    path = glob.glob(f"data/{timestamp}_*")[0]
+    num = int(re.findall(r"_(\d+)$", path)[0])
+    list_file = sorted(glob.glob(f"{path}/parameter_*.npy"), key=lambda x: (len(x), x))[
+        -1
+    ]
+    print(list_file)
+    with open(list_file, "rb") as f:
+        p = np.load(f)
+    with open(f"{path}/mt.npy", "rb") as f:
+        mt = np.load(f)
+    with open(f"{path}/reduced_map_order_id", "rb") as f:
+        map_order_id = pickle.load(f)
+    with open(f"{path}/cutoff", "r", encoding="utf8") as f:
+        cutoff = int(f.read())
+    with open(f"webpage-data/{num}_{cutoff}.json", "w", encoding="utf8") as f:
+        json.dump(
+            convert_parameter_for_website(
+                p=p, mt=mt, f=map_order_id, mal=anime, sample=sample
+            ),
+            f,
+        )
 
 
 def extract_list(timestamp: str) -> None:
@@ -157,6 +216,31 @@ def extract_list(timestamp: str) -> None:
             p = np.load(f)
         with open(f"{path}/list_{num}.json", "w", encoding="utf8") as f:
             json.dump(extract_list_from_parameter(p, map_order_id, mal), f)
+
+
+def extract_mal_info(
+    source_path: str = "data/anime", destination_path: str = "webpage-data/anime.json"
+) -> None:
+    """Create a JSON copy of a reduced dictionary with selected entries."""
+    with open(source_path, "rb") as f:
+        anime = pickle.load(f)
+    new_anime = {
+        anime_id: {
+            "title": entry["title"],
+            "picture": entry["main_picture"]["medium"]
+            if "main_picture" in entry
+            else None,
+            "title_en": entry["alternative_titles"]["en"]
+            if "alternative_titles" in entry and "en" in entry["alternative_titles"]
+            else None,
+            "score": entry["mean"] if "mean" in entry else None,
+            "rank": entry["rank"] if "rank" in entry else None,
+            "popularity": entry["popularity"] if "popularity" in entry else None,
+        }
+        for anime_id, entry in anime.items()
+    }
+    with open(destination_path, "w", encoding="utf8") as f:
+        json.dump(new_anime, f)
 
 
 if __name__ == "__main__":
@@ -198,10 +282,18 @@ if __name__ == "__main__":
         default="",
         help="timestamp on the data folder, by default it has type YYMMDD-HHMMSS",
     )
+    parser.add_argument(
+        "-w",
+        "--website",
+        action="store_true",
+    )
     args = parser.parse_args()
     if args.prepare:
         initialise(cutoff=args.cutoff)
     elif args.iterate:
         iterate(timestamp=args.iterate, num_iter=args.number)
     elif args.list:
-        extract_list(timestamp=args.list)
+        if args.website:
+            extract_list_for_website(timestamp=args.list)
+        else:
+            extract_list(timestamp=args.list)
