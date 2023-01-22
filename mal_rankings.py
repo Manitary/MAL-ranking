@@ -91,6 +91,8 @@ def initialise(
     p, mt, w, _, new_to_old = setup_bradley_terry(matrix=table, cutoff=cutoff)
     reduced_order_to_id = {i: order_to_id[new_to_old[i]] for i in range(p.shape[0])}
     reduced_id_to_order = {j: i for i, j in reduced_order_to_id.items()}
+    with open(f"data/{timestamp}_{len(sample)}/cutoff", "w", encoding="utf8") as f:
+        f.write(cutoff)
     with open(f"data/{timestamp}_{len(sample)}/reduced_map_id_order", "wb") as f:
         pickle.dump(reduced_id_to_order, f)
     with open(f"data/{timestamp}_{len(sample)}/reduced_map_order_id", "wb") as f:
