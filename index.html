@@ -48,7 +48,7 @@
     <div class="slidercontainer">
         <b>Exclude anime with at most the following number of comparisons:</b>
         <div class="child">
-            <input id="dataSelector" type="range" min="0" max="11" value="11" class="slider">
+            <input id="dataSelector" type="range" min="0" max="11" value="8" class="slider">
         </div>
         <div class="child" id="dataSelectorText"></div>
     </div>
@@ -83,7 +83,7 @@
         sliderTextUpdate("cutoffSelector", "cutoffSelectorText");
         sliderSelectData("dataSelector");
         sliderFilter("cutoffSelector", "dataSelector");
-        fetchData(11);
+        fetchData(8);
     </script>
 </body>
 </html>
