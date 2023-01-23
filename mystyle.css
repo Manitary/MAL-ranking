@@ -10,6 +10,10 @@
   }
 }
 
+a:visited {
+  color: yellow;
+}
+
 body {
   background-color: var(--colour-bg);
   color: var(--colour-fg);
@@ -22,6 +26,8 @@ body {
 table {
   border: 2px solid var(--colour-fg);
   border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
 }
 tr {
   border: solid;
@@ -31,4 +37,8 @@ td {
   border: solid;
   border-width: 1px 0;
   padding: 1em;
+}
+
+.banner {
+  text-align: center;
 }
