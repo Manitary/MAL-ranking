@@ -11,73 +11,70 @@
 <body>
     <div class="banner">
         <h1>MAL ranking via paired comparisons</h1>
-        <h3>(last updated: 18/01/2023)</h3>
+        <h4>Jump to: <a href="#introduction">Introduction</a> - <a href="#methodology">Methodology</a> - <a href="#results">Results</a> - <a href="#table">Table of rankings</a></h4>
+        <h4>(last updated: 18/01/2023)</h4>
     </div>
-    <h2>Introduction</h2>
-    The score of an anime on <a href="https://myanimelist.net/">MyAnimeList</a> (MAL) is computed as a weighted average of the score given by the users as described by the formula <a href="https://myanimelist.net/info.php?go=topanime">in this page</a>.
-    <br />
-    The global rankings resulting from said calculation are displayed at <a href="https://myanimelist.net/topanime.php">this page</a>.
+    <h2 id="introduction">Introduction</h2>
+    The score of an anime on <a href="https://myanimelist.net/">MyAnimeList</a> (MAL) is computed as a weighted average of the score given by the users as described by the formula <a href="https://myanimelist.net/info.php?go=topanime">in this page</a>. The global rankings resulting from said calculation are displayed at <a href="https://myanimelist.net/topanime.php">this page</a>.
     <br />
     <br />
     Every scoring/ranking system has its pros and cons; in the case of MAL rankings, one con is that users do not score anime using the same pattern: the numerical vote has a different meaning for each of them.
     <br />
     Some users use the full scale from 1 to 10, some consider 6-7 a low score and assign most scores in the 6-10 range, some may give either 10 (liked) or 1 (disliked) with no in-between, and so on.
     <br />
-    <br />
-    This small project was created out of curiosity of seeing what happens when using a different method that ignore discrepancy in scoring patterns, and is only based on the relative scores assigned by each user.  
-    <br />
-    For example, if a user scored A = 10, B = 10, C = 7, D = 0, the only information the model retains is A = B > C > D, ignoring the absolute scores.
+    Furthermore, not every viewer has watched and rated all the anime.
     <br />
     <br />
-    <h2>Methodology</h2>
-    We choose to use the <a href="https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model">Bradley-Terry</a> model, and use a random sample of 50,027 MAL users that scored at least 5 completed or dropped anime.
+    This small project was created <a href="https://old.reddit.com/r/anime/comments/108coan/top_10_most_favorited_studios_by_amount_of_anime/j3trft6/">out of curiosity</a> of seeing what happens when using a different method that ignores discrepancy in scoring patterns, and is only based on the relative scores assigned by each individual user.
     <br />
-    We construct the model table as if it was a sports tournament between all the anime. If two anime appear in one user's list, they 'play' against each other by comparing how the user scored them: a win is declared (1) if one is scored strictly higher than the other, (2) otherwise, if one is completed and the other is dropped. All other results are considered a tie and do not contribute to the model.
+    For example, if a user scored A = 10, B = 10, C = 7, D = 3, the only information the model retains is A = B > C > D, ignoring the absolute scores.  
+    <h2 id="methodology">Methodology</h2>
+    We choose to use the <a href="https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model">Bradley-Terry</a> model, and use a random sample of 50,027 MAL users that scored at least 5 completed or dropped anime. Given two anime, the model predicts the probability that a random users will prefer one over the other, based on the data we collected.
+    <br />
+    An intuitive way of explaining how we construct the model table is that we treat this as if it was a sports tournament with all the anime as competitors. If two anime appear in one user's list, they 'play' against each other by comparing how the user scored them: a win is declared (1) if one is scored strictly higher than the other, (2) otherwise, if one is completed and the other is dropped. All other results are considered a tie and do not contribute to the results.
     <br />
     The table is then used to approximate the parameters of the model.
     <br />
     <br />
-    <b>Disclaimer:</b> all the data used to computed the results was gathered from <a href="https://myanimelist.net/">MyAnimeList</a> via their official API between 14th and 18th January 2023.
-    <br />
-    The code used for the process is available on <a href="https://github.com/Manitary/MAL-ranking">GitHub</a>.
-    <h2>Results</h2>
-    One evident problem is that some anime are viewed by an extremely tiny number of users, sometimes in the single digits. Since such anime do not have many points of comparison, two issues surface: (1) the convergence speed of the parameter is much slower; (2) such outliers are not placed at an appropriate rank - if only three users watch anime A and rate it higher than FMA:B, do you think it is fair to say that A should be at the top of the ranks?
+    <b>Disclaimer:</b> All the data used to computed the results was gathered from <a href="https://myanimelist.net/">MyAnimeList</a> via their official API between 14th and 18th January 2023. The code used for the process is available on <a href="https://github.com/Manitary/MAL-ranking">GitHub</a>.
+    <h2 id="results">Results</h2>
+    One evident problem is that some anime are viewed by an extremely tiny number of users, sometimes in the single digits in our sample. Since such anime do not have many points of comparison, two issues surface: (1) the convergence speed of the parameter is much slower; (2) such outliers are not placed at an appropriate rank - if only three users watch anime A and rate it higher than the #1 anime on MAL, do you think it is fair to say that A should be at the top of the ranks?
     <br />
     To limit this issue, we have multiple datasets: for each, we removed the anime that have fewer than a given number of comparisons, shown next to the slider. Anime with 0 comparisons are automatically excluded.
     <br />
     <br />
-    <b>Note:</b> this is a limited selection of filters that were applied <em>before</em> the computation of the parameters.
+    <b>Note:</b> This is a limited selection of filters that were applied <em>before</em> the computation of the parameters.
     <br />
     <div class="slidercontainer">
-        <b>Filter minimum number of comparisons:</b>
+        <b>Exclude anime with at most the following number of comparisons:</b>
         <div class="child">
             <input id="dataSelector" type="range" min="0" max="11" value="11" class="slider">
         </div>
         <div class="child" id="dataSelectorText"></div>
     </div>
     <br />
-    Some anime with extremely low viewership still slip through the cracks: this next filter excludes the anime that appear in a limited number of users' lists, shown next to the slider.
+    Some anime with extremely low viewership still slip through the cracks: the next filter excludes the anime that appear in a limited number of users' lists, shown next to the slider.
     <br />
     <br />
-    <b>Note:</b> this filter is applied <em>after</em> the computation of the parameter.
+    <b>Note:</b> This filter is applied <em>after</em> the computation of the parameter.
     <div class="slidercontainer">
-        <b>Filter minimum number of lists:</b>
+        <b>Exclude anime that appear in at most the following number of lists:</b>
         <div class="child">
             <input id="cutoffSelector" type="range" min="0" max="50" value="10" class="slider">
         </div>
         <div class="child" id="cutoffSelectorText"></div>
     </div>
-    <h3>Reading the table</h3>
+    <h3 id="table">Reading the table</h3>
     <b># of comparisons</b> counts the total number of matches 'played' by the anime, i.e. how many times it was compared to some other anime.
     <br />
     <b>Sample popularity</b> counts how many users had the anime in their completed or dropped list, it includes the value as a percentage of the sample size.
     <br />
-    <b>Parameter</b> is the parameter of the anime in the probability model. What does it mean?
+    <b>Parameter</b> is the parameter assigned to the anime in the probability model.
     <br />
-    If we take two anime A and B with parameter p_A and p_B, respectively, the probability that a user rates A higher than B is P(A>B) = p_A / (p_A + p_B).
+    What does it mean? If we take two anime A and B with parameter p_A and p_B, respectively, the probability that a user rates A higher than B is P(A>B) = p_A / (p_A + p_B).
     <br />
     <br />
-    Note: the table may take a few seconds to load when opening the page or changing filters, especially on slower devices or connections.
+    <b>Note:</b> The table may take a few seconds to load when opening the page or changing filters, especially on slower devices or connections.
     <br />
     <br />
     <table id="animeTable"></table>
