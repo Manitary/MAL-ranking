@@ -69,7 +69,9 @@ def endless_iteration(
         with open(f"data/{timestamp}_{sample_size}/last_delta_{marker}.npy", "wb") as f:
             np.save(f, last_delta)
         with open(f"data/{timestamp}_{sample_size}/error_pct_{marker}.npy", "wb") as f:
-            np.save(f, last_delta / p * 100)
+            np.save(
+                f, np.divide(last_delta, p, out=np.zeros_like(p), where=p != 0) * 100
+            )
 
 
 def initialise(
@@ -77,6 +79,7 @@ def initialise(
     save: bool = True,
     timestamp: str = TIMESTAMP,
     cutoff: int = 0,
+    curb: int = 0,
 ) -> None:
     """Do the entire calculation from scratch."""
     sample = load_samples(*glob.glob(sample_path))
@@ -93,7 +96,13 @@ def initialise(
     table = create_table(
         size=len(id_to_order), id_to_order=id_to_order, sample=sample, save=save
     )
-    p, mt, w, _, new_to_old = setup_bradley_terry(matrix=table, cutoff=cutoff)
+    p, mt, w, _, new_to_old = setup_bradley_terry(
+        matrix=table,
+        sample=sample,
+        io_map=id_to_order,
+        curb=curb,
+        cutoff=cutoff,
+    )
     reduced_order_to_id = {i: order_to_id[new_to_old[i]] for i in range(p.shape[0])}
     reduced_id_to_order = {j: i for i, j in reduced_order_to_id.items()}
     with open(f"data/{timestamp}_{len(sample)}/reduced_map_id_order", "wb") as f:
@@ -283,6 +292,14 @@ if __name__ == "__main__":
         help="cutoff of total comparisons to include an entry, default=0",
     )
     parser.add_argument(
+        "-f",
+        "--filter",
+        metavar="F",
+        type=int,
+        default=0,
+        help="pre-filter by number of lists with the anime",
+    )
+    parser.add_argument(
         "-l",
         "--list",
         metavar="L",
@@ -297,7 +314,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.prepare:
-        initialise(cutoff=args.cutoff)
+        initialise(cutoff=args.cutoff, curb=args.filter)
     elif args.iterate:
         iterate(timestamp=args.iterate, num_iter=args.number)
     elif args.list:

@@ -8,6 +8,7 @@ import random
 import logging
 from datetime import datetime
 from itertools import combinations
+from collections import Counter
 from typing import Callable, Iterator
 import requests
 import numpy as np
@@ -343,13 +344,22 @@ def delete_row_cols(matrix: np.ndarray, indices: list[int]) -> np.ndarray:
 
 
 def setup_bradley_terry(
-    matrix: np.ndarray, cutoff: int = 0
+    matrix: np.ndarray,
+    sample: dict,
+    io_map: dict,
+    cutoff: int = 0,
+    curb: int = 0,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return the arrays needed to compute the parameters from the given table."""
     print("Constructing arrays")
     mt = matrix + matrix.transpose()
+    counter = Counter()
+    for _, user_list in sample.items():
+        for entry in user_list:
+            if entry["list_status"]["status"] in {"completed", "dropped"}:
+                counter[io_map[entry["node"]["id"]]] += 1
     sums = np.sum(mt, axis=0)
-    indices = [i for i, x in enumerate(sums) if x > cutoff]
+    indices = [i for i, x in enumerate(sums) if x > cutoff and counter[i] > curb]
     new_to_old = dict(enumerate(indices))
     old_to_new = {j: i for i, j in enumerate(indices)}
     matrix = delete_row_cols(matrix, indices)

@@ -6,7 +6,7 @@ import json
 from math import prod
 from PIL import Image, ImageFont, ImageDraw
 
-RESULT_FILE = "docs/data/50027_10500.json"
+RESULT_FILE = "docs/data/50027_100.json"
 ANIME = "data/anime"
 PICTURE_PATH = "docs/images"
 
@@ -125,17 +125,17 @@ for rank, entry in enumerate(filtered_results):
         title_lines = ["Code Geass:", "Hangyaku no Lelouch R2"]
     elif rank == 27:
         title_lines = ["Made in Abyss Movie 3:", "Fukaki Tamashii no Reimei"]
-    elif rank == 31:
+    elif rank == 30:
         title_lines = ["Made in Abyss:", "Retsujitsu no Ougonkyou"]
-    elif rank == 34:
+    elif rank == 36:
         title_lines = ["Fate/stay night Movie:", "Heaven's Feel - III. Spring Song"]
     elif rank == 38:
-        title_lines = ["JoJo no Kimyou na Bouken", "Part 6: Stone Ocean Part 3"]
-    elif rank == 41:
         title_lines = ["Monogatari Series:", "Second Season"]
-    elif rank == 42:
+    elif rank == 40:
+        title_lines = ["JoJo no Kimyou na Bouken", "Part 6: Stone Ocean Part 3"]
+    elif rank == 48:
         title_lines = ["Mushishi Zoku Shou:", "Odoro no Michi"]
-    elif rank == 49:
+    elif rank == 46:
         title_lines = ["Shingeki no Kyojin:", "The Final Season"]
     else:
         title_lines = textwrap.wrap(
