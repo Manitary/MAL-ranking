@@ -202,7 +202,7 @@ def extract_list_for_website(timestamp: str, sample_path: str = SAMPLE_PATH) -> 
         map_order_id = pickle.load(f)
     with open(f"{path}/cutoff", "r", encoding="utf8") as f:
         cutoff = int(f.read())
-    with open(f"webpage-data/{num}_{cutoff}.json", "w", encoding="utf8") as f:
+    with open(f"docs/data/{num}_{cutoff}.json", "w", encoding="utf8") as f:
         json.dump(
             convert_parameter_for_website(
                 p=p, mt=mt, f=map_order_id, mal=anime, sample=sample, e=e
@@ -227,7 +227,7 @@ def extract_list(timestamp: str) -> None:
 
 
 def extract_mal_info(
-    source_path: str = "data/anime", destination_path: str = "webpage-data/anime.json"
+    source_path: str = "data/anime", destination_path: str = "docs/data/anime.json"
 ) -> None:
     """Create a JSON copy of a reduced dictionary with selected entries."""
     with open(source_path, "rb") as f:

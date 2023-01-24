@@ -1,12 +1,14 @@
-"""Attempt to create a base picture for the infographic."""
+"""Create the infographic for the top 50 to publish."""
 
 import textwrap
+import pickle
 import json
 from math import prod
 from PIL import Image, ImageFont, ImageDraw
 
-RESULT_FILE = "webpage-data/50027_10500.json"
-ANIME = "webpage-data/anime.json"
+RESULT_FILE = "docs/data/50027_10500.json"
+ANIME = "data/anime"
+PICTURE_PATH = "docs/images"
 
 ENTRIES = (10, 5)
 TEXT_BOX = (450, 80)
@@ -57,9 +59,9 @@ def vote_vertices(x: int, y: int, direction: str = "up") -> list[tuple[int, int]
 with open(RESULT_FILE, encoding="utf8") as f:
     results = json.load(f)
 
-with open(ANIME, encoding="utf8") as f:
-    anime = json.load(f)
-anime = {int(k): v for k, v in anime.items()}
+with open(ANIME, "rb") as f:
+    anime = pickle.load(f)
+# anime = {int(k): v for k, v in anime.items()}
 
 filtered_results = [x for x in results if x["num_lists"] >= 10][: prod(ENTRIES)]
 
@@ -188,7 +190,7 @@ for rank, entry in enumerate(filtered_results):
     score_centre_y = global_y + RANK_BOX[1] * 5 // 2
     draw.text(
         (score_centre_x, score_centre_y),
-        f"{anime[entry['mal_ID']]['score']}",
+        f"{anime[entry['mal_ID']]['mean']}",
         TEXT_COLOUR,
         font=rank_font,
         anchor="mm",
@@ -237,5 +239,5 @@ for description in description_rows:
     )
     description_y += description_step
 
-final_image.save("top50.bmp", format="BMP")
-final_image.save("top50.jpg", format="JPEG")
+final_image.save(f"{PICTURE_PATH}/top50.bmp", format="BMP")
+final_image.save(f"{PICTURE_PATH}/top50.jpg", format="JPEG")
