@@ -133,10 +133,10 @@ for rank, entry in enumerate(filtered_results):
         title_lines = ["Monogatari Series:", "Second Season"]
     elif rank == 40:
         title_lines = ["JoJo no Kimyou na Bouken", "Part 6: Stone Ocean Part 3"]
-    elif rank == 48:
-        title_lines = ["Mushishi Zoku Shou:", "Odoro no Michi"]
     elif rank == 46:
         title_lines = ["Shingeki no Kyojin:", "The Final Season"]
+    elif rank == 48:
+        title_lines = ["Mushishi Zoku Shou:", "Odoro no Michi"]
     else:
         title_lines = textwrap.wrap(
             text=title,
