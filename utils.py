@@ -268,8 +268,8 @@ def collect_sample(
 
 
 def iterate_parameter(
-    p: NDArray[np.floating[Any]], mt: NDArray[np.uint], w: NDArray[np.uint]
-) -> NDArray[np.floating[Any]]:
+    p: NDArray[np.single], mt: NDArray[np.uint], w: NDArray[np.uint]
+) -> NDArray[np.single]:
     """Return the next approximation of the parameters of the Bradley-Terry model.
 
     Arguments:
@@ -281,7 +281,7 @@ def iterate_parameter(
     """
     s = np.fromiter(
         iter=(1 if w[i] == 0 else sum(mt[i] / (p[i] + p)) for i in range(p.shape[0])),
-        dtype=np.floating[Any],
+        dtype=np.single,
     )
     p_new = w / s
     return p_new / sum(p_new)
@@ -369,7 +369,7 @@ def setup_bradley_terry(
     cutoff: int = 0,
     curb: int = 0,
 ) -> tuple[
-    NDArray[np.floating[Any]],
+    NDArray[np.single],
     NDArray[np.uint],
     NDArray[np.uint],
     dict[int, int],
@@ -384,14 +384,14 @@ def setup_bradley_terry(
             if entry["list_status"]["status"] in {"completed", "dropped"}:
                 counter[io_map[entry["node"]["id"]]] += 1
     sums = np.sum(mt, axis=0)
-    indices = [i for i, x in enumerate(sums) if x > cutoff and counter[i] > curb]
+    indices = [i for i, x in enumerate(sums) if x > cutoff and counter[i] >= curb]
     new_to_old = dict(enumerate(indices))
     old_to_new = {j: i for i, j in enumerate(indices)}
     matrix = delete_row_cols(matrix, indices)
     mt = delete_row_cols(mt, indices)
 
     w: NDArray[np.uint] = np.sum(matrix, axis=1)
-    p: NDArray[np.floating[Any]] = np.ones(w.shape, dtype=float) / w.shape[0]
+    p: NDArray[np.single] = np.ones(w.shape, dtype=float) / w.shape[0]
     print("Setup completed")
     return p, mt, w, old_to_new, new_to_old
 
