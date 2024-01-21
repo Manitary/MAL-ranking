@@ -21,18 +21,27 @@ from tqdm import tqdm
 
 from models import Anime, UserList, UserListEntry
 
+logging.basicConfig(
+    filename="logs/logs.log",
+    format="%(asctime)s | %(levelname)-8s | %(name)s:%(lineno)d | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    encoding="utf-8",
+    level=logging.INFO,
+)
+
 load_dotenv()
 
 TIMESTAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
-CALLS = 10
-PERIOD = 6
+CALLS = 15
+PERIOD = 10
 assert CALLS / PERIOD > 0.5
 TIMEOUT = 60
 SAMPLE_SIZE = 10000
 NUM_ITERATIONS = 50
 MAL_USERS = 16169097  # As of 12/01/2023
 LEN_USERS = 8  # Number of digits
-MAL_ANIME = 54225  # As of 12/01/2023
+MAL_ANIME = 60000  # As of January 2024
+# https://myanimelist.net/forum/?goto=post&topicid=140439&id=70370969 has highest entry 57847
 MIN_LIST_SIZE = 5  # Minimum number of anime watched/dropped to consider a user.
 LINK_USER_ID = "https://myanimelist.net/comments.php?id={}"
 LINK_ANIME_ID = (
@@ -108,33 +117,42 @@ def get_anime_from_id(anime_id: int) -> Any | None:
     response = requests.get(
         LINK_ANIME_ID.format(anime_id), headers=HEADERS, timeout=TIMEOUT
     )
-    if response.status_code != 200:
+    if response.ok:
+        return response.json()
+    if response.status_code == 404:
         return None
-    return response.json()
+    logging.warning("Entry %s returned status %s", anime_id, response.status_code)
+    return None
 
 
-def get_all_anime() -> tuple[dict[str, dict[int, int]], dict[int, Anime]]:
+def get_all_anime(
+    range_min: int = 1,
+    range_max: int = MAL_ANIME,
+    valid_id_file: str = FILE_VALID_ANIME_ID,
+    db_file: str = FILE_ANIME_DB,
+) -> tuple[dict[str, dict[int, int]], dict[int, Anime]]:
     """Scrape all anime information.
 
     Store list of valid IDs and anime data."""
     id_list: list[int] = []
     anime_info: dict[int, Anime] = {}
-    for anime_id in tqdm(range(MAL_ANIME)):
+    for anime_id in tqdm(range(range_min, range_max)):
         try:
             data = get_anime_from_id(anime_id=anime_id)
-            if data:
-                anime_info[anime_id] = data
-                id_list.append(anime_id)
         except Exception:
             logging.exception("\nThe entry %s caused an exception\n", anime_id)
             continue
+        if data:
+            logging.info("Collected data for entry %s", anime_id)
+            anime_info[anime_id] = data
+            id_list.append(anime_id)
 
     order_to_id = dict(enumerate(id_list))
     id_to_order = {j: i for i, j in enumerate(id_list)}
     anime_list = {"order": order_to_id, "id": id_to_order}
-    with open(FILE_VALID_ANIME_ID, "wb") as f:
+    with open(valid_id_file, "wb") as f:
         pickle.dump(anime_list, f)
-    with open(FILE_ANIME_DB, "wb") as f:
+    with open(db_file, "wb") as f:
         pickle.dump(anime_info, f)
     return anime_list, anime_info
 
