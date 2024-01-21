@@ -1,22 +1,27 @@
 """Estimate the parameters of the Bradley-Terry model for a sample of MAL users."""
 
-import re
-import glob
 import argparse
-import pickle
+import glob
 import json
-from pathlib import Path
-from itertools import count
+import pickle
+import re
 from collections import Counter
+from itertools import count
+from pathlib import Path
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
 from tqdm import tqdm
+
+from models import Anime, Result, ResultShort, UserList
 from utils import (
+    TIMESTAMP,
     create_table,
-    setup_bradley_terry,
+    get_anime_ids_from_sample,
     iterate_parameter,
     load_samples,
-    get_anime_ids_from_sample,
-    TIMESTAMP,
+    setup_bradley_terry,
 )
 
 SAMPLE_PATH = "data/samples/sample_*.json"
@@ -25,11 +30,16 @@ SAVE_EVERY = 50
 
 
 def step_iteration(
-    p: np.ndarray,
-    mt: np.ndarray,
-    w: np.ndarray,
+    p: NDArray[np.floating[Any]],
+    mt: NDArray[np.uint],
+    w: NDArray[np.uint],
     num_iter: int,
-) -> tuple[np.ndarray, list[np.ndarray]]:
+) -> tuple[
+    NDArray[np.floating[Any]],
+    list[NDArray[np.floating[Any]]],
+    NDArray[Any],
+    NDArray[Any],
+]:
     """Iterate the parameter num_iter times.
 
     Display the max delta of a single parameter between first and last iteration."""
@@ -47,11 +57,11 @@ Last step max delta: {np.amax(last_delta)} at position {np.argmax(delta)}"""
 
 
 def endless_iteration(
-    datum: tuple[np.ndarray, np.ndarray, np.ndarray],
+    datum: tuple[NDArray[np.floating[Any]], NDArray[np.uint], NDArray[np.uint]],
     num_iter: int,
     timestamp: str,
     sample_size: int,
-    start=0,
+    start: int = 0,
 ) -> None:
     """Iterate endlessly the parameter computation.
 
@@ -146,12 +156,12 @@ def iterate(timestamp: str, num_iter: int = SAVE_EVERY) -> None:
 
 
 def extract_list_from_parameter(
-    p: np.ndarray, f: dict[int, int], mal: dict[int, dict]
-) -> list[tuple[int, float]]:
+    p: NDArray[np.floating[Any]], f: dict[int, int], mal: dict[int, Anime]
+) -> list[ResultShort]:
     """Transform the parameter vector into a list of dictionaries (ID, title, parameter)."""
     return sorted(
         (
-            {"mal_ID": f[i], "title": mal[f[i]]["title"], "parameter": v}
+            ResultShort(mal_ID=f[i], title=mal[f[i]]["title"], parameter=v)
             for i, v in enumerate(p)
             if f[i] in mal
         ),
@@ -161,29 +171,29 @@ def extract_list_from_parameter(
 
 
 def convert_parameter_for_website(
-    p: np.ndarray,
-    mt: np.ndarray,
+    p: NDArray[np.floating[Any]],
+    mt: NDArray[np.uint],
     f: dict[int, int],
-    mal: dict[int, dict],
-    sample: dict,
-    e: np.ndarray,
-) -> None:
+    mal: dict[int, Anime],
+    sample: dict[int, UserList],
+    e: NDArray[np.floating[Any]],
+) -> list[Result]:
     """Compute data used for the website from the results."""
-    counter = Counter()
+    counter = Counter[int]()
     for _, user_list in sample.items():
         for entry in user_list:
             if entry["list_status"]["status"] in {"completed", "dropped"}:
                 counter[entry["node"]["id"]] += 1
     return sorted(
         (
-            {
-                "mal_ID": f[i],
-                "parameter": v,
-                "num_comparisons": int(np.sum(mt[i])),
-                "num_lists": counter[f[i]],
-                "pct_lists": counter[f[i]] / len(sample) * 100,
-                "rel_error_pct": float(e[i]),
-            }
+            Result(
+                mal_ID=f[i],
+                parameter=v,
+                num_comparisons=int(np.sum(mt[i])),
+                num_lists=counter[f[i]],
+                pct_lists=counter[f[i]] / len(sample) * 100,
+                rel_error_pct=float(e[i]),
+            )
             for i, v in enumerate(p)
             if f[i] in mal
         ),

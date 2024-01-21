@@ -1,2 +1,4 @@
 .env
 *.ttf
+.venv
+__pycache__
