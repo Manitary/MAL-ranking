@@ -38,8 +38,10 @@ LINK_USER_ID = "https://myanimelist.net/comments.php?id={}"
 LINK_ANIME_ID = (
     "https://api.myanimelist.net/v2/anime/{}?fields="
     "id,title,main_picture,alternative_titles,start_date,end_date,synopsis,"
-    "mean,rank,popularity,num_list_users,num_scoring_users,nsfw,genres,media_type,status,"
-    "num_episodes,start_season,source,average_episode_duration,studios,statistics"
+    "mean,rank,popularity,num_list_users,num_scoring_users,nsfw,genres,"
+    "media_type,status,num_episodes,start_season,broadcast,source,"
+    "average_episode_duration,rating,studios,pictures,background,"
+    "related_anime,related_manga,recommendations,statistics"
 )
 LINK_USER_LIST = (
     "https://api.myanimelist.net/v2/users/{}/animelist?limit=1000&fields=list_status"
