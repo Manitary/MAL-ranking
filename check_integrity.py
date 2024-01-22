@@ -6,8 +6,9 @@ raised an exception when scraping the information about an ID."""
 
 import glob
 import pickle
-from utils import load_samples, FILE_ANIME_DB
+
 from mal_rankings import SAMPLE_PATH
+from utils import FILE_ANIME_DB, load_samples
 
 
 def get_anime_ids_from_sample(path_name: str = SAMPLE_PATH) -> set[int]:

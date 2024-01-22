@@ -5,6 +5,7 @@ By default, the results are stored locally for future use, and partial results a
 even when interrupted, as it is a very time-consuming process."""
 
 import argparse
+
 from utils import collect_sample
 
 SAMPLE_SIZE = 10000

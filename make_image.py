@@ -1,10 +1,11 @@
 """Create the infographic for the top 50 to publish."""
 
-import textwrap
-import pickle
 import json
+import pickle
+import textwrap
 from math import prod
-from PIL import Image, ImageFont, ImageDraw
+
+from PIL import Image, ImageDraw, ImageFont
 
 RESULT_FILE = "docs/data/50027_100.json"
 ANIME = "data/anime"

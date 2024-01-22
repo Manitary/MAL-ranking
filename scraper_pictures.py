@@ -2,10 +2,11 @@
 
 import json
 import shutil
+
 import requests
 from tqdm import tqdm
 
-with open("webpage-data/anime.json", encoding="utf8") as f:
+with open("docs/data/anime.json", encoding="utf8") as f:
     anime = json.load(f)
 
 anime = {int(k): v for k, v in anime.items()}
