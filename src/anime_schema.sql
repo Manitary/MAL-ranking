@@ -32,22 +32,25 @@ CREATE TABLE IF NOT EXISTS "main_picture" (
     FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS "pictures" (
-    "anime_id" INTEGER NOT NULL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS "anime_picture" (
+    "anime_id" INTEGER NOT NULL,
     "large" TEXT,
     "medium" TEXT NOT NULL,
+    PRIMARY KEY("anime_id", "medium"),
     FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "synonyms" (
-    "anime_id" INTEGER NOT NULL PRIMARY KEY,
+    "anime_id" INTEGER NOT NULL,
     "synonym" TEXT NOT NULL,
+    PRIMARY KEY("anime_id", "synonym") ON CONFLICT IGNORE,
     FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "genre" (
-    "genre_id" INTEGER NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL UNIQUE
+    "genre_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL UNIQUE,
+    PRIMARY KEY("genre_id") ON CONFLICT IGNORE
 );
 
 CREATE TABLE IF NOT EXISTS "anime_genre" (
@@ -59,8 +62,9 @@ CREATE TABLE IF NOT EXISTS "anime_genre" (
 );
 
 CREATE TABLE IF NOT EXISTS "studio" (
-    "studio_id" INTEGER NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL UNIQUE
+    "studio_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL UNIQUE,
+    PRIMARY KEY("studio_id") ON CONFLICT IGNORE
 );
 
 CREATE TABLE IF NOT EXISTS "anime_studio" (
@@ -75,16 +79,15 @@ CREATE TABLE IF NOT EXISTS "related_anime" (
     "anime_id" INTEGER NOT NULL,
     "related_anime_id" INTEGER NOT NULL,
     "relation_type" TEXT NOT NULL,
-    PRIMARY KEY("anime_id", "related_anime_id"),
-    FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE,
-    FOREIGN KEY("related_anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
+    PRIMARY KEY("anime_id", "related_anime_id", "relation_type"),
+    FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "related_manga" (
     "anime_id" INTEGER NOT NULL,
     "manga_id" INTEGER NOT NULL,
     "relation_type" TEXT NOT NULL,
-    PRIMARY KEY("anime_id", "manga_id"),
+    PRIMARY KEY("anime_id", "manga_id", "relation_type"),
     FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
 

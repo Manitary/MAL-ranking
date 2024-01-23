@@ -62,9 +62,7 @@ class SourceType(StrEnum):
     MUSIC = auto()
 
 
-class Picture(TypedDict, total=False):
-    large: str
-    medium: Required[str]
+type Picture = dict[str, str]
 
 
 class ListStatus(TypedDict):
@@ -95,38 +93,38 @@ class AltTitles(TypedDict, total=False):
     ja: str
 
 
-class Genre(TypedDict):
+class Genre(TypedDict, total=False):
     id: int
     name: str
 
 
-class Season(TypedDict):
+class Season(TypedDict, total=False):
     year: int
     season: str
 
 
-class Studio(TypedDict):
+class Studio(TypedDict, total=False):
     id: int
     name: str
 
 
 class Broadcast(TypedDict, total=False):
-    day_of_the_week: Required[str]
+    day_of_the_week: str
     start_time: str
 
 
-class RelatedEntry(TypedDict):
+class RelatedEntry(TypedDict, total=False):
     node: ListNode
     relation_type: Relation
     relation_type_formatted: str
 
 
-class Recommendation(TypedDict):
+class Recommendation(TypedDict, total=False):
     node: ListNode
     num_recommendations: int
 
 
-class AnimeStatus(TypedDict):
+class AnimeStatus(TypedDict, total=False):
     watching: int
     completed: int
     on_hold: int
@@ -134,7 +132,7 @@ class AnimeStatus(TypedDict):
     plan_to_watch: int
 
 
-class AnimeStats(TypedDict):
+class AnimeStats(TypedDict, total=False):
     status: AnimeStatus
     num_list_users: int
 
@@ -150,27 +148,27 @@ class Anime(TypedDict, total=False):
     mean: float | None
     rank: int | None
     popularity: int | None
-    num_list_users: Required[int]
-    num_scoring_users: Required[int]
+    num_list_users: int
+    num_scoring_users: int
     nsfw: NSFWClass | None
-    genres: Required[list[Genre]]
+    genres: list[Genre]
     # created_at: str
     # updated_at: str
-    media_type: Required[MediaType]
-    status: Required[AiringStatus]
+    media_type: MediaType
+    status: AiringStatus
     # my_list_status: ListStatus
-    num_episodes: Required[int]
+    num_episodes: int
     start_season: Season | None
     broadcast: Broadcast | None
     source: SourceType | None
     average_episode_duration: int | None
     rating: AgeRating | None
-    studios: Required[list[Studio]]
-    pictures: Required[list[Picture]]
+    studios: list[Studio]
+    pictures: list[Picture]
     background: str | None
-    related_anime: Required[list[RelatedEntry]]
-    related_manga: Required[list[RelatedEntry]]
-    recommendations: Required[list[Recommendation]]
+    related_anime: list[RelatedEntry]
+    related_manga: list[RelatedEntry]
+    recommendations: list[Recommendation]
     statistics: AnimeStats | None
 
 
