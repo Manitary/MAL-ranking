@@ -85,14 +85,15 @@ def insert_anime(anime_db: sqlite3.Connection, anime: Anime) -> None:
             "INSERT INTO synonyms (anime_id, synonym) VALUES (?, ?)",
             ((anime["id"], synonym) for synonym in synonyms),
         )
-    anime_db.executemany(
-        "INSERT INTO genre (genre_id, name) VALUES (?, ?)",
-        ((genre["id"], genre["name"]) for genre in anime["genres"]),
-    )
-    anime_db.executemany(
-        "INSERT INTO anime_genre (anime_id, genre_id) VALUES (?, ?)",
-        ((anime["id"], genre["id"]) for genre in anime["genres"]),
-    )
+    if genres := anime.get("genres", None):
+        anime_db.executemany(
+            "INSERT INTO genre (genre_id, name) VALUES (?, ?)",
+            ((genre["id"], genre["name"]) for genre in genres),
+        )
+        anime_db.executemany(
+            "INSERT INTO anime_genre (anime_id, genre_id) VALUES (?, ?)",
+            ((anime["id"], genre["id"]) for genre in genres),
+        )
     anime_db.executemany(
         "INSERT INTO studio (studio_id, name) VALUES (?, ?)",
         ((studio["id"], studio["name"]) for studio in anime["studios"]),
