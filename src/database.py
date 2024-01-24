@@ -5,7 +5,7 @@ from pathlib import Path
 from models import Anime
 
 DB_DIR_PATH = Path(__file__).resolve().parent.parent / "data"
-SCRIPT_PATH = Path(__file__).resolve().parent
+SCRIPT_PATH = Path(__file__).resolve().parent / "queries"
 
 
 def adapt_date_iso(val: datetime) -> str:
