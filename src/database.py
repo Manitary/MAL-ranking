@@ -1,3 +1,4 @@
+import csv
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -6,6 +7,7 @@ from models import Anime
 
 DB_DIR_PATH = Path(__file__).resolve().parent.parent / "data"
 SCRIPT_PATH = Path(__file__).resolve().parent / "queries"
+CSV_DIR_PATH = Path(__file__).resolve().parent.parent / "outputs"
 
 
 def adapt_date_iso(val: datetime) -> str:
@@ -162,6 +164,142 @@ def insert_anime(anime_db: sqlite3.Connection, anime: Anime) -> None:
     anime_db.commit()
 
 
+def get_company_dub_stats(anime_db: sqlite3.Connection, company_name: str):
+    with open(SCRIPT_PATH / "cr_company_dubs.sql", encoding="utf-8") as f:
+        query = f.read()
+    q = anime_db.execute(query, {"company": company_name})
+    return q
+
+
+def get_companies_dub_stats(anime_db: sqlite3.Connection, *company_names: str):
+    with open(SCRIPT_PATH / "cr_companies_dubs.sql", encoding="utf-8") as f:
+        query = f.read()
+    q = anime_db.execute(
+        query.format(qm=",".join("?" for _ in range(len(company_names)))),
+        company_names + company_names,
+    )
+    return q
+
+
+def export_to_csv(file_name: str, query_result: sqlite3.Cursor) -> None:
+    path = CSV_DIR_PATH / f"{file_name}.csv"
+    with path.open("w", encoding="utf-8") as f:
+        writer = csv.writer(f, lineterminator="\n")
+        writer.writerow(i[0] for i in query_result.description)
+        writer.writerows(query_result)
+
+
+def season_dubs_data(anime_db: sqlite3.Connection, season: str, year: int):
+    companies = anime_db.execute(
+        "SELECT company_id, name FROM company ORDER BY company_id"
+    ).fetchall()
+    total_shows = anime_db.execute(
+        """SELECT COUNT(*) FROM cr WHERE season = ? AND year = ?""", (season, year)
+    ).fetchone()[0]
+    total_dubs = anime_db.execute(
+        """SELECT COUNT(*) FROM cr WHERE season = ? AND year = ? AND dub = 1""",
+        (season, year),
+    ).fetchone()[0]
+    company_data: dict[tuple[int, str], dict[str, float]] = {}
+    for company_id, company_name in companies:
+        shows = anime_db.execute(
+            """
+            SELECT COUNT(*) FROM cr
+            INNER JOIN company_anime ca ON cr.myanimelist = ca.anime_id
+            WHERE
+                cr.season = ?
+            AND cr.year = ?
+            AND ca.company_id = ?
+            """,
+            (season, year, company_id),
+        ).fetchone()
+        if not shows:
+            continue
+        num_shows = shows[0]
+        if not num_shows:
+            continue
+        num_dubs = anime_db.execute(
+            """
+            SELECT COUNT(*) FROM cr
+            INNER JOIN company_anime ca ON cr.myanimelist = ca.anime_id
+            WHERE
+                cr.season = ?
+            AND cr.year = ?
+            AND ca.company_id = ?
+            AND cr.dub = 1
+            """,
+            (season, year, company_id),
+        ).fetchone()[0]
+        company_data[company_id, company_name] = {
+            "num_shows": num_shows,
+            "num_dubs": num_dubs,
+            "pct_total_shows": num_shows / total_shows,
+            "pct_total_dubs": num_dubs / total_dubs,
+            "pct_own_dub": num_dubs / num_shows,
+        }
+    return company_data
+
+
+SEASONS = ("fall", "summer", "spring", "winter")
+YEARS = range(2024, 2005, -1)
+
+
+def process_row(company_data: dict[tuple[int, str], dict[str, float]], row_name: str):
+    data = sorted(
+        ((k[0], k[1], v[row_name]) for k, v in company_data.items()),
+        key=lambda x: x[2],
+        reverse=True,
+    )
+    return data
+
+
+def season_dubs_breakdown(
+    anime_db: sqlite3.Connection,
+    season: str,
+    year: int,
+    path: Path,
+):
+    print(f"Processing season {season} {year}")
+    company_data = season_dubs_data(anime_db, season, year)
+    for row_name in (
+        "num_shows",
+        "num_dubs",
+        "pct_total_shows",
+        "pct_total_dubs",
+        "pct_own_dub",
+    ):
+        data = process_row(company_data, row_name)
+        if not data:
+            continue
+        with path.open("a", encoding="utf-8") as f:
+            f.write(
+                f"{season},{year},{row_name},"
+                f"{",".join(f"[{d[2] if isinstance(d[2], int) else f"{d[2]:.2%}"}] {d[1]} ({d[0]})" for d in data)}"
+                "\n"
+            )
+
+
+def all_seasons_dubs_breakdown(
+    anime_db: sqlite3.Connection,
+    path: Path = CSV_DIR_PATH / "all_seasons_dubs_breakdown.csv",
+):
+    for year in YEARS:
+        for season in SEASONS:
+            season_dubs_breakdown(anime_db, season, year, path)
+
+
 if __name__ == "__main__":
-    create_tables("anime", "anime")
-    create_tables("api", "api")
+    pass
+    # create_tables("anime", "anime")
+    # create_tables("api", "api")
+    # export_to_csv(
+    #     "cygames_cyberagent_abema",
+    #     get_companies_dub_stats(
+    #         get_connection("anime"),
+    #         "Cygames",
+    #         "CygamesPictures",
+    #         "CyberAgent",
+    #         "AbemaTV",
+    #     ),
+    # )
+    # all_seasons_dubs_breakdown(get_connection("anime"))
