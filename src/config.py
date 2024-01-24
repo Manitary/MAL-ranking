@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MAL_ANIME = 60000  # As of January 2024
+MAL_COMPANY = 3000  # As of January 2024
 
 CALLS = 15
 PERIOD = 10
@@ -24,3 +25,4 @@ LINK_ANIME_ID = (
     "related_anime,related_manga,recommendations,statistics"
 )
 # https://myanimelist.net/forum/?goto=post&topicid=140439&id=70370969 has highest entry 57847
+LINK_COMPANY_ID = "https://myanimelist.net/anime/producer/{}"

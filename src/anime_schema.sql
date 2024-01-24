@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "anime" (
     "anime_id" INTEGER NOT NULL PRIMARY KEY,
-    "title" TEXT UNIQUE NOT NULL,
+    "title" TEXT NOT NULL,
     "title_en" TEXT,
     "title_ja" TEXT,
     "start_date" TEXT,
@@ -108,5 +108,20 @@ CREATE TABLE IF NOT EXISTS "statistics" (
     "on_hold" INTEGER NOT NULL DEFAULT 0,
     "dropped" INTEGER NOT NULL DEFAULT 0,
     "plan_to_watch" INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "company" (
+    "company_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    PRIMARY KEY("company_id") ON CONFLICT IGNORE
+);
+
+CREATE TABLE IF NOT EXISTS "company_anime" (
+    "company_id" INTEGER NOT NULL,
+    "anime_id" INTEGER NOT NULL,
+    "category" TEXT NOT NULL,
+    PRIMARY KEY("company_id", "anime_id", "category"),
+    FOREIGN KEY("company_id") REFERENCES "company"("company_id") ON DELETE CASCADE,
     FOREIGN KEY("anime_id") REFERENCES "anime"("anime_id") ON DELETE CASCADE
 );
