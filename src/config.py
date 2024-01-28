@@ -20,9 +20,9 @@ LINK_ANIME_ID = (
     "https://api.myanimelist.net/v2/anime/{}?fields="
     "id,title,main_picture,alternative_titles,start_date,end_date,synopsis,"
     "mean,rank,popularity,num_list_users,num_scoring_users,nsfw,genres,"
-    "media_type,status,num_episodes,start_season,broadcast,source,"
-    "average_episode_duration,rating,studios,pictures,background,"
-    "related_anime,related_manga,recommendations,statistics"
+    "created_at,updated_at,media_type,status,num_episodes,"
+    "start_season,broadcast,source,average_episode_duration,rating,"
+    "studios,pictures,background,related_anime,related_manga,recommendations,statistics"
 )
 # https://myanimelist.net/forum/?goto=post&topicid=140439&id=70370969 has highest entry 57847
 LINK_COMPANY_ID = "https://myanimelist.net/anime/producer/{}"

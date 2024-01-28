@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS "anime" (
     "num_list_users" INTEGER NOT NULL DEFAULT 0,
     "num_scoring_users" INTEGER NOT NULL DEFAULT 0,
     "nsfw" TEXT,
+    "created_at" TEXT NOT NULL,
+    "updated_at" TEXT NOT NULL,
     "media_type" TEXT NOT NULL DEFAULT "unknown",
     "status" TEXT NOT NULL,
     "num_episodes" INTEGER NOT NULL DEFAULT 0,

@@ -22,12 +22,12 @@ class QueryError(Exception):
 
 @sleep_and_retry
 @limits(calls=CALLS, period=PERIOD)
-def query_anime_from_id(anime_id: int, api_db: Connection = API_DB) -> Any | None:
+def query_anime_from_id(
+    anime_id: int, api_db: Connection = API_DB, query: str = LINK_ANIME_ID
+) -> Any | None:
     """Return the MAL anime entry corresponding to the given ID, if it exists."""
     t = datetime.now(UTC)
-    response = requests.get(
-        LINK_ANIME_ID.format(anime_id), headers=HEADERS, timeout=TIMEOUT
-    )
+    response = requests.get(query.format(anime_id), headers=HEADERS, timeout=TIMEOUT)
     api_db.execute(
         """
         INSERT INTO api_call (endpoint, element_id, response, timestamp)
@@ -52,7 +52,7 @@ def get_anime_from_id(
     timeout = 30
     while True:
         try:
-            anime = query_anime_from_id(anime_id, api_db)
+            anime = query_anime_from_id(anime_id)
         except QueryError:
             logging.info("Sleeping (%s)", timeout)
             time.sleep(timeout)
@@ -109,7 +109,7 @@ def get_invalid_anime_id(api_db: Connection = API_DB) -> set[int]:
 
 
 def get_all_anime_id(anime_db: Connection = ANIME_DB) -> set[int]:
-    q = anime_db.execute("SELECT anime_id FROM anime").fetchall()
+    q = anime_db.execute("SELECT anime_id FROM anime ORDER BY anime_id").fetchall()
     return {x[0] for x in q}
 
 
@@ -127,4 +127,5 @@ def get_all_anime(anime_db: Connection = ANIME_DB, api_db: Connection = API_DB) 
 
 
 if __name__ == "__main__":
-    get_all_anime()
+    pass
+    # get_all_anime()

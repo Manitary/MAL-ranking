@@ -69,6 +69,8 @@ def insert_anime(anime_db: sqlite3.Connection, anime: Anime) -> None:
             anime["num_list_users"],
             anime["num_scoring_users"],
             anime.get("nsfw", None),
+            anime["created_at"],
+            anime["updated_at"],
             anime["media_type"],
             anime["status"],
             anime["num_episodes"],

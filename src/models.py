@@ -152,8 +152,8 @@ class Anime(TypedDict, total=False):
     num_scoring_users: int
     nsfw: NSFWClass | None
     genres: list[Genre]
-    # created_at: str
-    # updated_at: str
+    created_at: Required[str]
+    updated_at: Required[str]
     media_type: MediaType
     status: AiringStatus
     # my_list_status: ListStatus
